@@ -30,6 +30,7 @@ const Settings = () => {
 
   const keys = [
     { key: 'app_name', label: '📱 App Name', icon: <Save size={20} /> },
+    { key: 'app_logo_url', label: '🖼️ App Logo URL', icon: <Image size={20} /> },
     { key: 'home_banner_subtitle', label: '🏠 Home Banner Subtitle', icon: <Save size={20} /> },
     { key: 'home_banner_image_url', label: '🖼️ Home Banner Image URL', icon: <Image size={20} /> },
     { key: 'terms_and_conditions', label: 'Terms & Conditions', icon: <FileText size={20} /> },
