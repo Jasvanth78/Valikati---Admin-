@@ -18,7 +18,11 @@ const NallaNeram = () => {
 
   const fetchEntries = async () => {
     try {
-      const response = await fetch('https://vali-backend-ywwv.onrender.com/api/admin/nalla-neram')
+      const response = await fetch(`${API_BASE_URL}/api/admin/nalla-neram`, {
+        headers: {
+          'Authorization': 'Bearer ' + localStorage.getItem('adminToken')
+        }
+      })
       if (response.ok) {
         const data = await response.json()
         setEntries(data)
@@ -33,9 +37,12 @@ const NallaNeram = () => {
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault()
     try {
-      const response = await fetch('https://vali-backend-ywwv.onrender.com/api/admin/nalla-neram', {
+      const response = await fetch(`${API_BASE_URL}/api/admin/nalla-neram`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + localStorage.getItem('adminToken')
+        },
         body: JSON.stringify(newEntry)
       })
       if (response.ok) {
@@ -45,6 +52,23 @@ const NallaNeram = () => {
       }
     } catch (error) {
       console.error('Error adding nalla neram:', error)
+    }
+  }
+
+  const handleDelete = async (id: string) => {
+    if (!window.confirm('Are you sure you want to delete this Nalla Neram entry?')) return
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/admin/nalla-neram/${id}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': 'Bearer ' + localStorage.getItem('adminToken')
+        }
+      })
+      if (response.ok) {
+        fetchEntries()
+      }
+    } catch (error) {
+      console.error('Error deleting entry:', error)
     }
   }
 
@@ -156,7 +180,11 @@ const NallaNeram = () => {
                     <button className="p-2 hover:bg-white/5 rounded-lg text-gray-500 hover:text-astrology-gold transition-all">
                       <Edit2 size={16} />
                     </button>
-                    <button className="p-2 hover:bg-red-500/10 rounded-lg text-gray-500 hover:text-red-500 transition-all">
+                    <button 
+                      onClick={() => handleDelete(entry.id)}
+                      className="p-2 hover:bg-red-500/10 rounded-lg text-gray-500 hover:text-red-500 transition-all"
+                      title="Delete"
+                    >
                       <Trash2 size={16} />
                     </button>
                   </div>

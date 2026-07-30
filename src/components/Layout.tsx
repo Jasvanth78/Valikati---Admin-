@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { LayoutDashboard, Users as UsersIcon, Calendar, Bell, MessageSquare, Settings as SettingsIcon, Menu, X, Star, Clock, LayoutGrid } from 'lucide-react'
+import { LayoutDashboard, Users as UsersIcon, Calendar, Bell, MessageSquare, Settings as SettingsIcon, Menu, X, Star, Clock, LayoutGrid, BookOpen, Sparkles } from 'lucide-react'
 import Dashboard from '../pages/Dashboard'
 import RasiPalan from '../pages/RasiPalan'
 import Panchangam from '../pages/Panchangam'
@@ -11,6 +11,8 @@ import MugurthaNaal from '../pages/MugurthaNaal'
 import NallaNeram from '../pages/NallaNeram'
 import Settings from '../pages/Settings'
 import AppCards from '../pages/AppCards'
+import Blogs from '../pages/Blogs'
+import Events from '../pages/Events'
 
 const Layout = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(window.innerWidth > 768)
@@ -19,6 +21,8 @@ const Layout = () => {
   const renderPage = () => {
     switch (activePage) {
       case 'dashboard': return <Dashboard />
+      case 'blogs': return <Blogs />
+      case 'events': return <Events />
       case 'rasi': return <RasiPalan />
       case 'panchangam': return <Panchangam />
       case 'notifications': return <Notifications />
@@ -66,6 +70,8 @@ const Layout = () => {
 
         <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
           <NavItem icon={<LayoutDashboard size={20} />} label="Dashboard" active={activePage === 'dashboard'} onClick={() => navigate('dashboard')} isOpen={isSidebarOpen} />
+          <NavItem icon={<BookOpen size={20} className="text-emerald-400" />} label="Blogs" active={activePage === 'blogs'} onClick={() => navigate('blogs')} isOpen={isSidebarOpen} />
+          <NavItem icon={<Sparkles size={20} className="text-amber-400" />} label="Upcoming Events" active={activePage === 'events'} onClick={() => navigate('events')} isOpen={isSidebarOpen} />
           <NavItem icon={<Star size={20} />} label="Rasi Palan" active={activePage === 'rasi'} onClick={() => navigate('rasi')} isOpen={isSidebarOpen} />
           <NavItem icon={<Calendar size={20} />} label="Panchangam" active={activePage === 'panchangam'} onClick={() => navigate('panchangam')} isOpen={isSidebarOpen} />
           <NavItem icon={<Star size={20} className="text-orange-400" />} label="Festivals" active={activePage === 'festivals'} onClick={() => navigate('festivals')} isOpen={isSidebarOpen} />
@@ -77,6 +83,7 @@ const Layout = () => {
           <NavItem icon={<LayoutGrid size={20} />} label="App Cards" active={activePage === 'app-cards'} onClick={() => navigate('app-cards')} isOpen={isSidebarOpen} />
           <NavItem icon={<SettingsIcon size={20} />} label="Settings" active={activePage === 'settings'} onClick={() => navigate('settings')} isOpen={isSidebarOpen} />
         </nav>
+
 
         <button 
           onClick={() => setIsSidebarOpen(!isSidebarOpen)}

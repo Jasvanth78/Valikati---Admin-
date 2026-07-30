@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Save, AlertTriangle, FileText, Shield, Image } from 'lucide-react';
 import axios from 'axios';
 import { API_BASE_URL } from '../utils/api';
+import { ImageUploader } from '../components/ImageUploader';
 
 const api = axios.create({
   baseURL: `${API_BASE_URL}/api/admin`
@@ -30,12 +31,13 @@ const Settings = () => {
 
   const keys = [
     { key: 'app_name', label: '📱 App Name', icon: <Save size={20} /> },
-    { key: 'app_logo_url', label: '🖼️ App Logo URL', icon: <Image size={20} /> },
+    { key: 'app_logo_url', label: '🖼️ App Logo URL', icon: <Image size={20} />, isImage: true },
     { key: 'home_banner_subtitle', label: '🏠 Home Banner Subtitle', icon: <Save size={20} /> },
-    { key: 'home_banner_image_url', label: '🖼️ Home Banner Image URL', icon: <Image size={20} /> },
+    { key: 'home_banner_image_url', label: '🖼️ Home Banner Image URL', icon: <Image size={20} />, isImage: true },
+    { key: 'god_quote', label: '✨ Divine Quotes Banner (Hindu, Muslim, Jesus Quotes)', icon: <Save size={20} /> },
     { key: 'terms_and_conditions', label: 'Terms & Conditions', icon: <FileText size={20} /> },
     { key: 'privacy_policy', label: 'Privacy Policy', icon: <Shield size={20} /> },
-    { key: 'disclaimer', label: 'App Disclaimer', icon: <AlertTriangle size={20} /> },
+    { key: 'Disclaimer', label: 'App Disclaimer', icon: <AlertTriangle size={20} /> },
   ];
 
   const handleEdit = (item: any) => {
@@ -63,7 +65,7 @@ const Settings = () => {
       </div>
 
       <div className="grid gap-6">
-        {keys.map(({ key, label, icon }) => {
+        {keys.map(({ key, label, icon, isImage }) => {
           const item = content.find(c => c.key === key) || { key, ta: '', en: '' };
           const isEditing = editingKey === key;
 
@@ -86,26 +88,37 @@ const Settings = () => {
 
               {isEditing ? (
                 <div className="space-y-4 animate-in fade-in slide-in-from-top-4">
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Tamil Version</label>
-                      <textarea 
-                        className="w-full h-48 bg-astrology-dark border border-astrology-gold/20 rounded-lg p-4 text-white focus:outline-none focus:border-astrology-gold transition-colors resize-none"
-                        placeholder="Enter Tamil content..."
-                        value={formData.ta}
-                        onChange={(e) => setFormData({ ...formData, ta: e.target.value })}
+                  {isImage ? (
+                    <div className="space-y-3">
+                      <ImageUploader 
+                        label={label}
+                        value={formData.en || formData.ta}
+                        onChange={(url) => setFormData({ ta: url, en: url })}
+                        folder="app_settings"
                       />
                     </div>
-                    <div className="space-y-2">
-                      <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">English Version</label>
-                      <textarea 
-                        className="w-full h-48 bg-astrology-dark border border-astrology-gold/20 rounded-lg p-4 text-white focus:outline-none focus:border-astrology-gold transition-colors resize-none"
-                        placeholder="Enter English content..."
-                        value={formData.en}
-                        onChange={(e) => setFormData({ ...formData, en: e.target.value })}
-                      />
+                  ) : (
+                    <div className="grid md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Tamil Version</label>
+                        <textarea 
+                          className="w-full h-48 bg-astrology-dark border border-astrology-gold/20 rounded-lg p-4 text-white focus:outline-none focus:border-astrology-gold transition-colors resize-none"
+                          placeholder="Enter Tamil content..."
+                          value={formData.ta}
+                          onChange={(e) => setFormData({ ...formData, ta: e.target.value })}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">English Version</label>
+                        <textarea 
+                          className="w-full h-48 bg-astrology-dark border border-astrology-gold/20 rounded-lg p-4 text-white focus:outline-none focus:border-astrology-gold transition-colors resize-none"
+                          placeholder="Enter English content..."
+                          value={formData.en}
+                          onChange={(e) => setFormData({ ...formData, en: e.target.value })}
+                        />
+                      </div>
                     </div>
-                  </div>
+                  )}
                   <div className="flex justify-end gap-3">
                     <button 
                       onClick={() => setEditingKey(null)}
@@ -124,18 +137,36 @@ const Settings = () => {
                 </div>
               ) : (
                 <div className="grid md:grid-cols-2 gap-6 p-4 bg-astrology-dark/50 rounded-lg border border-white/5">
-                  <div className="space-y-2">
-                    <span className="text-[10px] text-astrology-gold/60 font-bold uppercase">Tamil Preview</span>
-                    <p className="text-sm text-gray-400 line-clamp-3 italic">
-                      {item.ta || "No content added yet."}
-                    </p>
-                  </div>
-                  <div className="space-y-2">
-                    <span className="text-[10px] text-astrology-gold/60 font-bold uppercase">English Preview</span>
-                    <p className="text-sm text-gray-400 line-clamp-3 italic">
-                      {item.en || "No content added yet."}
-                    </p>
-                  </div>
+                  {isImage ? (
+                    <div className="col-span-2 flex items-center gap-4">
+                      {item.en || item.ta ? (
+                        <img 
+                          src={item.en || item.ta} 
+                          alt="preview" 
+                          className="h-16 w-24 object-cover rounded-lg border border-white/10" 
+                          onError={(e) => (e.currentTarget.style.display = 'none')}
+                        />
+                      ) : (
+                        <span className="text-xs text-gray-500 italic">No image URL configured</span>
+                      )}
+                      <span className="text-xs text-gray-400 truncate max-w-lg">{item.en || item.ta}</span>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="space-y-2">
+                        <span className="text-[10px] text-astrology-gold/60 font-bold uppercase">Tamil Preview</span>
+                        <p className="text-sm text-gray-400 line-clamp-3 italic">
+                          {item.ta || "No content added yet."}
+                        </p>
+                      </div>
+                      <div className="space-y-2">
+                        <span className="text-[10px] text-astrology-gold/60 font-bold uppercase">English Preview</span>
+                        <p className="text-sm text-gray-400 line-clamp-3 italic">
+                          {item.en || "No content added yet."}
+                        </p>
+                      </div>
+                    </>
+                  )}
                 </div>
               )}
             </div>

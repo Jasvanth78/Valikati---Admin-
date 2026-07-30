@@ -36,8 +36,11 @@ const Panchangam = () => {
     try {
       const response = await fetch(`${API_BASE_URL}/api/admin/panchangam`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: jsonEncode(newEntry)
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + localStorage.getItem('adminToken')
+        },
+        body: JSON.stringify(newEntry)
       })
       if (response.ok) {
         setIsAdding(false)
@@ -54,8 +57,22 @@ const Panchangam = () => {
     }
   }
 
-  // Helper for JSON encoding (React component doesn't have it by default, using global JSON)
-  const jsonEncode = (obj: any) => JSON.stringify(obj);
+  const handleDelete = async (id: string) => {
+    if (!window.confirm('Are you sure you want to delete this Panchangam entry?')) return
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/admin/panchangam/${id}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': 'Bearer ' + localStorage.getItem('adminToken')
+        }
+      })
+      if (response.ok) {
+        fetchPanchangam()
+      }
+    } catch (error) {
+      console.error('Error deleting panchangam:', error)
+    }
+  }
 
   return (
     <div className="font-['Inter']">
@@ -180,7 +197,11 @@ const Panchangam = () => {
               <button className="p-2 hover:bg-astrology-gold/10 rounded-lg text-gray-400 hover:text-astrology-gold transition-all">
                 <Edit2 size={18} />
               </button>
-              <button className="p-2 hover:bg-red-500/10 rounded-lg text-gray-400 hover:text-red-500 transition-all">
+              <button 
+                onClick={() => handleDelete(entry.id)}
+                className="p-2 hover:bg-red-500/10 rounded-lg text-gray-400 hover:text-red-500 transition-all"
+                title="Delete"
+              >
                 <Trash2 size={18} />
               </button>
             </div>
