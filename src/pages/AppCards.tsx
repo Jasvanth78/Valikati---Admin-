@@ -4,10 +4,26 @@ import { API_BASE_URL } from '../utils/api'
 import { ImageUploader } from '../components/ImageUploader'
 
 const api = {
-  get: (url: string) => fetch(`${API_BASE_URL}/api/admin${url}`, { headers: { Authorization: 'Bearer ' + localStorage.getItem('adminToken') } }).then(r => r.json()),
-  post: (url: string, body: any) => fetch(`${API_BASE_URL}/api/admin${url}`, { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + localStorage.getItem('adminToken') }, body: JSON.stringify(body) }).then(r => r.json()),
-  put: (url: string, body: any) => fetch(`${API_BASE_URL}/api/admin${url}`, { method: 'PUT', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + localStorage.getItem('adminToken') }, body: JSON.stringify(body) }).then(r => r.json()),
-  delete: (url: string) => fetch(`${API_BASE_URL}/api/admin${url}`, { method: 'DELETE', headers: { Authorization: 'Bearer ' + localStorage.getItem('adminToken') } }).then(r => r.json()),
+  get: (url: string) => fetch(`${API_BASE_URL}/api/admin${url}`, { headers: { Authorization: 'Bearer ' + localStorage.getItem('adminToken') } }).then(async r => {
+    const data = await r.json().catch(() => ({ error: 'Invalid response from server' }))
+    if (!r.ok) throw new Error(data.error || data.message || `HTTP ${r.status}`)
+    return data
+  }),
+  post: (url: string, body: any) => fetch(`${API_BASE_URL}/api/admin${url}`, { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + localStorage.getItem('adminToken') }, body: JSON.stringify(body) }).then(async r => {
+    const data = await r.json().catch(() => ({ error: 'Invalid response from server' }))
+    if (!r.ok) throw new Error(data.error || data.message || `HTTP ${r.status}`)
+    return data
+  }),
+  put: (url: string, body: any) => fetch(`${API_BASE_URL}/api/admin${url}`, { method: 'PUT', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + localStorage.getItem('adminToken') }, body: JSON.stringify(body) }).then(async r => {
+    const data = await r.json().catch(() => ({ error: 'Invalid response from server' }))
+    if (!r.ok) throw new Error(data.error || data.message || `HTTP ${r.status}`)
+    return data
+  }),
+  delete: (url: string) => fetch(`${API_BASE_URL}/api/admin${url}`, { method: 'DELETE', headers: { Authorization: 'Bearer ' + localStorage.getItem('adminToken') } }).then(async r => {
+    const data = await r.json().catch(() => ({ error: 'Invalid response from server' }))
+    if (!r.ok) throw new Error(data.error || data.message || `HTTP ${r.status}`)
+    return data
+  }),
 }
 
 const SCREEN_OPTIONS = [
@@ -54,7 +70,7 @@ const AppCards = () => {
       setIsAdding(false)
       setForm({ ...emptyCard })
       fetchCards()
-    } catch (e) { alert('Failed to save card') }
+    } catch (e: any) { alert(`Failed to save card: ${e.message || 'Unknown error'}`) }
   }
 
   const handleEdit = (card: any) => {

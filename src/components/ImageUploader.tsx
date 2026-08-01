@@ -10,6 +10,57 @@ interface ImageUploaderProps {
   folder?: string;
 }
 
+const compressImage = (file: File, maxWidth = 1200, maxHeight = 1200, quality = 0.82): Promise<File> => {
+  return new Promise((resolve) => {
+    if (!file.type.startsWith('image/') || file.type.includes('svg')) {
+      return resolve(file);
+    }
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = (e) => {
+      const img = new window.Image();
+      img.src = e.target?.result as string;
+      img.onload = () => {
+        let width = img.width;
+        let height = img.height;
+
+        if (width > maxWidth || height > maxHeight) {
+          if (width > height) {
+            height = Math.round((height * maxWidth) / width);
+            width = maxWidth;
+          } else {
+            width = Math.round((width * maxHeight) / height);
+            height = maxHeight;
+          }
+        }
+
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return resolve(file);
+
+        ctx.drawImage(img, 0, 0, width, height);
+
+        canvas.toBlob(
+          (blob) => {
+            if (!blob) return resolve(file);
+            const compressedFile = new File([blob], file.name.replace(/\.[^/.]+$/, '.webp'), {
+              type: 'image/webp',
+              lastModified: Date.now(),
+            });
+            resolve(compressedFile);
+          },
+          'image/webp',
+          quality
+        );
+      };
+      img.onerror = () => resolve(file);
+    };
+    reader.onerror = () => resolve(file);
+  });
+};
+
 export const ImageUploader: React.FC<ImageUploaderProps> = ({
   value,
   onChange,
@@ -32,11 +83,12 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
     setIsUploading(true);
     setError(null);
 
-    const formData = new FormData();
-    formData.append('image', file);
-    formData.append('folder', folder);
-
     try {
+      const processedFile = await compressImage(file);
+      const formData = new FormData();
+      formData.append('image', processedFile);
+      formData.append('folder', folder);
+
       const res = await fetch(`${API_BASE_URL}/api/upload`, {
         method: 'POST',
         body: formData,
