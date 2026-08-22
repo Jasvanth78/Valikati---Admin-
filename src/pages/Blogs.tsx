@@ -117,6 +117,7 @@ const Blogs = () => {
       contentEn: blog.contentEn || '',
       author: blog.author || 'Valikatti Team',
       imageUrl: blog.imageUrl || '',
+      audioUrl: blog.audioUrl || '',
       sendNotification: false
     })
     setEditingId(blog.id)
