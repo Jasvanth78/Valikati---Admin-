@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react'
 import { Plus, Edit2, Trash2, BookOpen, Send, User, Tag, Image as ImageIcon, X } from 'lucide-react'
 import { API_BASE_URL } from '../utils/api'
 import { ImageUploader } from '../components/ImageUploader'
+import ReactQuill from 'react-quill'
+import 'react-quill/dist/quill.snow.css'
 
 interface BlogForm {
   id?: string
@@ -13,6 +15,7 @@ interface BlogForm {
   contentEn: string
   author: string
   imageUrl: string
+  audioUrl?: string
   sendNotification: boolean
 }
 
@@ -25,6 +28,7 @@ const emptyBlogForm: BlogForm = {
   contentEn: '',
   author: 'Valikatti Team',
   imageUrl: '',
+  audioUrl: '',
   sendNotification: true
 }
 
@@ -231,26 +235,23 @@ const Blogs = () => {
                 </div>
               </div>
 
-              <div>
+              <div className="text-black">
                 <label className="block text-sm font-medium text-astrology-gold mb-1">Content (Tamil) *</label>
-                <textarea
-                  required
-                  rows={4}
-                  placeholder="தமிழ் கட்டுரை விவரங்களை உள்ளிடவும்..."
+                <ReactQuill 
+                  theme="snow"
                   value={blogForm.contentTa}
-                  onChange={e => setBlogForm({ ...blogForm, contentTa: e.target.value })}
-                  className="w-full bg-astrology-dark/60 border border-astrology-gold/20 rounded-lg p-2.5 text-white focus:border-astrology-gold outline-none"
+                  onChange={(content) => setBlogForm({ ...blogForm, contentTa: content })}
+                  className="bg-white rounded-lg"
                 />
               </div>
 
-              <div>
+              <div className="text-black">
                 <label className="block text-sm font-medium text-astrology-gold mb-1">Content (English)</label>
-                <textarea
-                  rows={3}
-                  placeholder="Enter English content (optional)..."
+                <ReactQuill 
+                  theme="snow"
                   value={blogForm.contentEn}
-                  onChange={e => setBlogForm({ ...blogForm, contentEn: e.target.value })}
-                  className="w-full bg-astrology-dark/60 border border-astrology-gold/20 rounded-lg p-2.5 text-white focus:border-astrology-gold outline-none"
+                  onChange={(content) => setBlogForm({ ...blogForm, contentEn: content })}
+                  className="bg-white rounded-lg"
                 />
               </div>
 
@@ -259,6 +260,17 @@ const Blogs = () => {
                 <ImageUploader
                   value={blogForm.imageUrl}
                   onChange={(url) => setBlogForm({ ...blogForm, imageUrl: url })}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-astrology-gold mb-1">Audio URL (Optional)</label>
+                <input
+                  type="text"
+                  placeholder="https://example.com/audio.mp3"
+                  value={blogForm.audioUrl || ''}
+                  onChange={e => setBlogForm({ ...blogForm, audioUrl: e.target.value })}
+                  className="w-full bg-astrology-dark/60 border border-astrology-gold/20 rounded-lg p-2.5 text-white focus:border-astrology-gold outline-none"
                 />
               </div>
 
