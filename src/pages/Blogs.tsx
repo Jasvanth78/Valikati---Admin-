@@ -35,6 +35,7 @@ const emptyBlogForm: BlogForm = {
 const Blogs = () => {
   const [blogs, setBlogs] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [isDeleteAllModalOpen, setIsDeleteAllModalOpen] = useState(false)
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [blogForm, setBlogForm] = useState<BlogForm>(emptyBlogForm)
@@ -138,6 +139,24 @@ const Blogs = () => {
       }
     } catch (error) {
       console.error('Error deleting blog:', error)
+    }
+  }
+
+
+  const handleDeleteAll = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/admin/blogs/all`, {
+        method: 'DELETE',
+        headers: { 'Authorization': 'Bearer ' + localStorage.getItem('adminToken') }
+      })
+      if (response.ok) {
+        setIsDeleteAllModalOpen(false)
+        fetchEntries()
+      } else {
+        alert('Failed to delete all data')
+      }
+    } catch (error) {
+      console.error('Error deleting all data:', error)
     }
   }
 
@@ -388,6 +407,34 @@ const Blogs = () => {
               </div>
             </div>
           ))}
+        </div>
+      )}
+    
+      {isDeleteAllModalOpen && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+          <div className="bg-astrology-card p-6 rounded-xl border border-red-500/30 shadow-2xl max-w-md w-full">
+            <div className="flex items-center gap-4 text-red-400 mb-4">
+              <AlertTriangle size={32} />
+              <h3 className="text-xl font-bold">WARNING: Delete All Data</h3>
+            </div>
+            <p className="text-gray-300 mb-6 font-['Inter']">
+              Are you sure you want to delete ALL data in this section? This action is permanent and cannot be undone.
+            </p>
+            <div className="flex justify-end gap-3">
+              <button 
+                onClick={() => setIsDeleteAllModalOpen(false)}
+                className="px-4 py-2 rounded-lg text-gray-400 hover:text-white hover:bg-white/5"
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={handleDeleteAll}
+                className="px-4 py-2 bg-red-600 hover:bg-red-500 text-white rounded-lg font-bold"
+              >
+                Yes, Delete All Data
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
