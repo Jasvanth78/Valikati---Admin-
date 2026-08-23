@@ -235,6 +235,15 @@ const Panchangam = () => {
           if (entryDate instanceof Date) {
             entryDate.setMinutes(entryDate.getMinutes() - entryDate.getTimezoneOffset());
             entryDate = entryDate.toISOString().split('T')[0];
+          } else if (typeof entryDate === 'string') {
+            const parts = entryDate.split(/[-/]/);
+            if (parts.length === 3) {
+              if (parts[0].length <= 2 && parts[2].length === 4) {
+                entryDate = `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+              } else if (parts[0].length === 4) {
+                entryDate = `${parts[0]}-${parts[1].padStart(2, '0')}-${parts[2].padStart(2, '0')}`;
+              }
+            }
           }
 
           parsedRecords.push({
