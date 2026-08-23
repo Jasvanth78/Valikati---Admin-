@@ -663,16 +663,38 @@ const Panchangam = () => {
                       <thead className="bg-white/5 text-astrology-gold uppercase text-xs">
                         <tr>
                           <th className="px-4 py-3">Date</th>
-                          <th className="px-4 py-3">Sunrise / Sunset</th>
-                          <th className="px-4 py-3">Tithi & Nakshatram</th>
+                          <th className="px-4 py-3">Sun (R/S)</th>
+                          <th className="px-4 py-3">Tithi/Star</th>
+                          <th className="px-4 py-3">Yog/Kar</th>
+                          <th className="px-4 py-3">Auspicious (N/G)</th>
+                          <th className="px-4 py-3">Inauspicious (R/Y/K)</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-white/5">
                         {previewData.slice(0, 15).map((row, i) => (
                           <tr key={i} className="hover:bg-white/5">
                             <td className="px-4 py-3 whitespace-nowrap">{row.date}</td>
-                            <td className="px-4 py-3 whitespace-nowrap">{row.sunrise} / {row.sunset}</td>
-                            <td className="px-4 py-3 whitespace-nowrap">{row.tithi} - {row.nakshatram}</td>
+                            <td className="px-4 py-3 whitespace-nowrap text-xs">
+                              <div>R: {row.sunrise}</div>
+                              <div>S: {row.sunset}</div>
+                            </td>
+                            <td className="px-4 py-3 whitespace-nowrap text-xs">
+                              <div>T: {row.tithi}</div>
+                              <div>S: {row.nakshatram}</div>
+                            </td>
+                            <td className="px-4 py-3 whitespace-nowrap text-xs">
+                              <div>Y: {row.yogam}</div>
+                              <div>K: {row.karanam}</div>
+                            </td>
+                            <td className="px-4 py-3 whitespace-nowrap text-xs text-green-300">
+                              <div>N: {row.nallaNeram}</div>
+                              <div>G: {row.gowriNallaNeram}</div>
+                            </td>
+                            <td className="px-4 py-3 whitespace-nowrap text-xs text-red-300">
+                              <div>Rahu: {row.rahuKalam}</div>
+                              <div>Yema: {row.yemagandam}</div>
+                              <div>Kuli: {row.kuligai}</div>
+                            </td>
                           </tr>
                         ))}
                       </tbody>

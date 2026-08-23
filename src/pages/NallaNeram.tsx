@@ -580,6 +580,8 @@ const NallaNeram = () => {
                           <th className="px-4 py-3">Date</th>
                           <th className="px-4 py-3">Morning</th>
                           <th className="px-4 py-3">Evening</th>
+                          <th className="px-4 py-3">Gowri (M/E)</th>
+                          <th className="px-4 py-3">Inauspicious (R/Y/K)</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-white/5">
@@ -588,6 +590,15 @@ const NallaNeram = () => {
                             <td className="px-4 py-3 whitespace-nowrap">{row.date}</td>
                             <td className="px-4 py-3 whitespace-nowrap">{row.morning}</td>
                             <td className="px-4 py-3 whitespace-nowrap">{row.evening}</td>
+                            <td className="px-4 py-3 whitespace-nowrap text-xs text-yellow-200/90">
+                              <div>M: {row.gowriMorning}</div>
+                              <div>E: {row.gowriEvening}</div>
+                            </td>
+                            <td className="px-4 py-3 whitespace-nowrap text-xs text-red-300">
+                              <div>Rahu: {row.rahuKalam}</div>
+                              <div>Yema: {row.yemagandam}</div>
+                              <div>Kuli: {row.kuligai}</div>
+                            </td>
                           </tr>
                         ))}
                       </tbody>
