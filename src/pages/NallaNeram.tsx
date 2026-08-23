@@ -233,7 +233,7 @@ const NallaNeram = () => {
             gowriMorning: String(rowObj['gowrimorning'] || ''),
             gowriEvening: String(rowObj['gowrievening'] || ''),
             rahuKalam: String(rowObj['rahukalam'] || ''),
-            yemagandam: String(rowObj['yemagandam'] || ''),
+            yemagandam: String(rowObj['yemagandam'] || rowObj['yamagandam'] || ''),
             kuligai: String(rowObj['kuligai'] || ''),
             _rawPreview: rowObj
           });

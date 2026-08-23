@@ -258,7 +258,7 @@ const Panchangam = () => {
             nallaNeram: String(rowObj['nallaneram'] || ''),
             gowriNallaNeram: String(rowObj['gowrinallaneram'] || ''),
             rahuKalam: String(rowObj['rahukalam'] || ''),
-            yemagandam: String(rowObj['yemagandam'] || ''),
+            yemagandam: String(rowObj['yemagandam'] || rowObj['yamagandam'] || ''),
             kuligai: String(rowObj['kuligai'] || ''),
             _rawPreview: rowObj
           });
