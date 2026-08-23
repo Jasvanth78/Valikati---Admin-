@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Plus, Edit2, Trash2, Calendar, Clock, MapPin, Send, Image as ImageIcon, X, Sparkles } from 'lucide-react'
+import { Plus, Edit2, Trash2, Calendar, Clock, MapPin, Send, Image as ImageIcon, X, Sparkles, AlertTriangle } from 'lucide-react'
 import { API_BASE_URL } from '../utils/api'
 import { ImageUploader } from '../components/ImageUploader'
 

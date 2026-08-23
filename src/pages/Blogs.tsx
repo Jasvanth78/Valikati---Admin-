@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Plus, Edit2, Trash2, BookOpen, Send, User, Tag, Image as ImageIcon, X } from 'lucide-react'
+import { Plus, Edit2, Trash2, BookOpen, Send, User, Tag, Image as ImageIcon, X, AlertTriangle } from 'lucide-react'
 import { API_BASE_URL } from '../utils/api'
 import { ImageUploader } from '../components/ImageUploader'
 import ReactQuill from 'react-quill-new'

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { Plus, Edit2, Trash2, Search, Filter, Upload, FileText, Check, X, Sparkles, ChevronDown, ChevronUp, Calendar } from 'lucide-react'
+import { Plus, Edit2, Trash2, Search, Filter, Upload, FileText, Check, X, Sparkles, ChevronDown, ChevronUp, Calendar, AlertTriangle } from 'lucide-react'
 import { API_BASE_URL } from '../utils/api'
 import * as XLSX from 'xlsx'
 
