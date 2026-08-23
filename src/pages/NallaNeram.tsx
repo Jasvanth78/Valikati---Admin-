@@ -199,7 +199,8 @@ const NallaNeram = () => {
           
           headerNames.forEach((header, index) => {
              if (header && row[index] !== undefined && row[index] !== null && row[index] !== '') {
-               rowObj[header] = row[index];
+               const cleanKey = header.replace(/[^a-z0-9]/g, '');
+               rowObj[cleanKey] = row[index];
                isEmptyRow = false;
              }
           });
@@ -218,11 +219,11 @@ const NallaNeram = () => {
 
           parsedRecords.push({
             date: entryDate,
-            morning: String(rowObj['morning'] || ''),
-            evening: String(rowObj['evening'] || ''),
-            gowriMorning: String(rowObj['gowrimorning'] || rowObj['gowri_morning'] || ''),
-            gowriEvening: String(rowObj['gowrievening'] || rowObj['gowri_evening'] || ''),
-            rahuKalam: String(rowObj['rahukalam'] || rowObj['rahu_kalam'] || ''),
+            morning: String(rowObj['morningnallaneram'] || rowObj['morning'] || ''),
+            evening: String(rowObj['eveningnallaneram'] || rowObj['evening'] || ''),
+            gowriMorning: String(rowObj['gowrimorning'] || ''),
+            gowriEvening: String(rowObj['gowrievening'] || ''),
+            rahuKalam: String(rowObj['rahukalam'] || ''),
             yemagandam: String(rowObj['yemagandam'] || ''),
             kuligai: String(rowObj['kuligai'] || ''),
             _rawPreview: rowObj

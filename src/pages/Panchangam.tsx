@@ -219,7 +219,8 @@ const Panchangam = () => {
           
           headerNames.forEach((header, index) => {
              if (header && row[index] !== undefined && row[index] !== null && row[index] !== '') {
-               rowObj[header] = row[index];
+               const cleanKey = header.replace(/[^a-z0-9]/g, '');
+               rowObj[cleanKey] = row[index];
                isEmptyRow = false;
              }
           });
@@ -245,9 +246,9 @@ const Panchangam = () => {
             yogam: String(rowObj['yogam'] || ''),
             karanam: String(rowObj['karanam'] || ''),
             details: String(rowObj['details'] || ''),
-            nallaNeram: String(rowObj['nallaneram'] || rowObj['nalla_neram'] || ''),
-            gowriNallaNeram: String(rowObj['gowrinallaneram'] || rowObj['gowri_nalla_neram'] || ''),
-            rahuKalam: String(rowObj['rahukalam'] || rowObj['rahu_kalam'] || ''),
+            nallaNeram: String(rowObj['nallaneram'] || ''),
+            gowriNallaNeram: String(rowObj['gowrinallaneram'] || ''),
+            rahuKalam: String(rowObj['rahukalam'] || ''),
             yemagandam: String(rowObj['yemagandam'] || ''),
             kuligai: String(rowObj['kuligai'] || ''),
             _rawPreview: rowObj
