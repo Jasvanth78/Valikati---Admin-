@@ -327,7 +327,7 @@ const Panchangam = () => {
       })
       if (response.ok) {
         setIsDeleteAllModalOpen(false)
-        fetchEntries()
+        fetchPanchangam()
       } else {
         alert('Failed to delete all data')
       }

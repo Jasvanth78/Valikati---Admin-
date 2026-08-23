@@ -146,7 +146,7 @@ const Events = () => {
       })
       if (response.ok) {
         setIsDeleteAllModalOpen(false)
-        fetchEntries()
+        fetchEvents()
       } else {
         alert('Failed to delete all data')
       }

@@ -264,7 +264,7 @@ const Festivals = () => {
       })
       if (response.ok) {
         setIsDeleteAllModalOpen(false)
-        fetchEntries()
+        fetchFestivals()
       } else {
         alert('Failed to delete all data')
       }

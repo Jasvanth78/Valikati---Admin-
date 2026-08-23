@@ -458,7 +458,7 @@ const RasiPalan = () => {
       })
       if (response.ok) {
         setIsDeleteAllModalOpen(false)
-        fetchEntries()
+        fetchPredictions()
       } else {
         alert('Failed to delete all data')
       }

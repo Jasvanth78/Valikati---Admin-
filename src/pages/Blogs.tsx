@@ -151,7 +151,7 @@ const Blogs = () => {
       })
       if (response.ok) {
         setIsDeleteAllModalOpen(false)
-        fetchEntries()
+        fetchBlogs()
       } else {
         alert('Failed to delete all data')
       }
