@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { LayoutDashboard, Users as UsersIcon, Calendar, Bell, MessageSquare, Settings as SettingsIcon, Menu, X, Star, Clock, LayoutGrid, BookOpen, Sparkles } from 'lucide-react'
+import { LayoutDashboard, Users as UsersIcon, Calendar, Bell, MessageSquare, Settings as SettingsIcon, Menu, X, Star, Clock, LayoutGrid, BookOpen, Sparkles, Shield } from 'lucide-react'
 import Dashboard from '../pages/Dashboard'
 import RasiPalan from '../pages/RasiPalan'
 import Panchangam from '../pages/Panchangam'
@@ -13,6 +13,7 @@ import Settings from '../pages/Settings'
 import AppCards from '../pages/AppCards'
 import Blogs from '../pages/Blogs'
 import Events from '../pages/Events'
+import Admins from '../pages/Admins'
 
 const Layout = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(window.innerWidth > 768)
@@ -33,6 +34,7 @@ const Layout = () => {
       case 'ai': return <AIControl />
       case 'settings': return <Settings />
       case 'app-cards': return <AppCards />
+      case 'admins': return <Admins />
       default: return <Dashboard />
     }
   }
@@ -82,6 +84,7 @@ const Layout = () => {
           <NavItem icon={<MessageSquare size={20} />} label="AI Control" active={activePage === 'ai'} onClick={() => navigate('ai')} isOpen={isSidebarOpen} />
           <NavItem icon={<LayoutGrid size={20} />} label="App Cards" active={activePage === 'app-cards'} onClick={() => navigate('app-cards')} isOpen={isSidebarOpen} />
           <NavItem icon={<SettingsIcon size={20} />} label="Settings" active={activePage === 'settings'} onClick={() => navigate('settings')} isOpen={isSidebarOpen} />
+          <NavItem icon={<Shield size={20} />} label="Admins" active={activePage === 'admins'} onClick={() => navigate('admins')} isOpen={isSidebarOpen} />
         </nav>
 
 

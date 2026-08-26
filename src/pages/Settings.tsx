@@ -39,6 +39,7 @@ const Settings = () => {
     { key: 'privacy_policy', label: 'Privacy Policy', icon: <Shield size={20} /> },
     { key: 'Disclaimer', label: 'App Disclaimer', icon: <AlertTriangle size={20} /> },
     { key: 'app_share_link', label: '🔗 App Download Link (For Sharing)', icon: <Save size={20} /> },
+    { key: 'contact_us', label: 'Contact Us', icon: <FileText size={20} /> },
   ];
 
   const handleEdit = (item: any) => {
