@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { LayoutDashboard, Users as UsersIcon, Calendar, Bell, MessageSquare, Settings as SettingsIcon, Menu, X, Star, Clock, LayoutGrid, BookOpen, Sparkles, Shield } from 'lucide-react'
+import { LayoutDashboard, Users as UsersIcon, Calendar, Bell, MessageSquare, Settings as SettingsIcon, Menu, X, Star, Clock, LayoutGrid, BookOpen, Sparkles, Shield, Home, Eye } from 'lucide-react'
 import Dashboard from '../pages/Dashboard'
 import RasiPalan from '../pages/RasiPalan'
 import Panchangam from '../pages/Panchangam'
@@ -14,6 +14,8 @@ import AppCards from '../pages/AppCards'
 import Blogs from '../pages/Blogs'
 import Events from '../pages/Events'
 import Admins from '../pages/Admins'
+import VastuSasthiram from '../pages/VastuSasthiram'
+import Sakunam from '../pages/Sakunam'
 
 const Layout = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(window.innerWidth > 768)
@@ -35,6 +37,8 @@ const Layout = () => {
       case 'settings': return <Settings />
       case 'app-cards': return <AppCards />
       case 'admins': return <Admins />
+      case 'vastu': return <VastuSasthiram />
+      case 'sakunam': return <Sakunam />
       default: return <Dashboard />
     }
   }
@@ -77,6 +81,8 @@ const Layout = () => {
           <NavItem icon={<Star size={20} />} label="Rasi Palan" active={activePage === 'rasi'} onClick={() => navigate('rasi')} isOpen={isSidebarOpen} />
           <NavItem icon={<Calendar size={20} />} label="Panchangam" active={activePage === 'panchangam'} onClick={() => navigate('panchangam')} isOpen={isSidebarOpen} />
           <NavItem icon={<Star size={20} className="text-orange-400" />} label="Festivals" active={activePage === 'festivals'} onClick={() => navigate('festivals')} isOpen={isSidebarOpen} />
+          <NavItem icon={<Home size={20} className="text-emerald-300" />} label="Vastu Sasthiram" active={activePage === 'vastu'} onClick={() => navigate('vastu')} isOpen={isSidebarOpen} />
+          <NavItem icon={<Eye size={20} className="text-indigo-400" />} label="Sakunam (Omens)" active={activePage === 'sakunam'} onClick={() => navigate('sakunam')} isOpen={isSidebarOpen} />
           <NavItem icon={<Calendar size={20} className="text-pink-400" />} label="Mugurtha Naal" active={activePage === 'mugurtha-naal'} onClick={() => navigate('mugurtha-naal')} isOpen={isSidebarOpen} />
           <NavItem icon={<Clock size={20} className="text-blue-400" />} label="Nalla Neram" active={activePage === 'nalla-neram'} onClick={() => navigate('nalla-neram')} isOpen={isSidebarOpen} />
           <NavItem icon={<UsersIcon size={20} />} label="Users" active={activePage === 'users'} onClick={() => navigate('users')} isOpen={isSidebarOpen} />

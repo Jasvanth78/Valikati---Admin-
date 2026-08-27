@@ -29,7 +29,7 @@ const emptyBlogForm: BlogForm = {
   author: 'Valikatti Team',
   imageUrl: '',
   audioUrl: '',
-  sendNotification: true
+  sendNotification: false
 }
 
 const Blogs = () => {
