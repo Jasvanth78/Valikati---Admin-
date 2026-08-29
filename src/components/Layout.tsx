@@ -16,6 +16,7 @@ import Events from '../pages/Events'
 import Admins from '../pages/Admins'
 import VastuSasthiram from '../pages/VastuSasthiram'
 import Sakunam from '../pages/Sakunam'
+import SpecialFeatures from '../pages/SpecialFeatures'
 
 const Layout = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(window.innerWidth > 768)
@@ -39,6 +40,7 @@ const Layout = () => {
       case 'admins': return <Admins />
       case 'vastu': return <VastuSasthiram />
       case 'sakunam': return <Sakunam />
+      case 'special-features': return <SpecialFeatures />
       default: return <Dashboard />
     }
   }
@@ -89,6 +91,7 @@ const Layout = () => {
           <NavItem icon={<Bell size={20} />} label="Notifications" active={activePage === 'notifications'} onClick={() => navigate('notifications')} isOpen={isSidebarOpen} />
           <NavItem icon={<MessageSquare size={20} />} label="AI Control" active={activePage === 'ai'} onClick={() => navigate('ai')} isOpen={isSidebarOpen} />
           <NavItem icon={<LayoutGrid size={20} />} label="App Cards" active={activePage === 'app-cards'} onClick={() => navigate('app-cards')} isOpen={isSidebarOpen} />
+          <NavItem icon={<Star size={20} className="text-yellow-400" />} label="Special Features" active={activePage === 'special-features'} onClick={() => navigate('special-features')} isOpen={isSidebarOpen} />
           <NavItem icon={<SettingsIcon size={20} />} label="Settings" active={activePage === 'settings'} onClick={() => navigate('settings')} isOpen={isSidebarOpen} />
           <NavItem icon={<Shield size={20} />} label="Admins" active={activePage === 'admins'} onClick={() => navigate('admins')} isOpen={isSidebarOpen} />
         </nav>

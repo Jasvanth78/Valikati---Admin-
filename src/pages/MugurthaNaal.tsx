@@ -25,6 +25,11 @@ const MugurthaNaal = () => {
     time: '', 
     type: 'Valarpirai', 
     category: 'marriage',
+    month: 'January',
+    thithi: '',
+    natchathiram: '',
+    yogam: '',
+    lagnam: '',
     description: '' 
   })
 
@@ -34,6 +39,11 @@ const MugurthaNaal = () => {
     time: '', 
     type: 'Valarpirai', 
     category: 'marriage',
+    month: 'January',
+    thithi: '',
+    natchathiram: '',
+    yogam: '',
+    lagnam: '',
     description: '' 
   })
 
@@ -90,12 +100,17 @@ const MugurthaNaal = () => {
           date: newEntry.date,
           time: newEntry.time,
           type: newEntry.type,
+          month: newEntry.month,
+          thithi: newEntry.thithi,
+          natchathiram: newEntry.natchathiram,
+          yogam: newEntry.yogam,
+          lagnam: newEntry.lagnam,
           description: formattedDesc,
         })
       })
       if (response.ok) {
         setIsAdding(false)
-        setNewEntry({ date: new Date().toISOString().split('T')[0], time: '', type: 'Valarpirai', category: 'marriage', description: '' })
+        setNewEntry({ date: new Date().toISOString().split('T')[0], time: '', type: 'Valarpirai', category: 'marriage', month: 'January', thithi: '', natchathiram: '', yogam: '', lagnam: '', description: '' })
         fetchEntries()
       } else {
         alert('Failed to add Mugurtham entry')
@@ -126,6 +141,11 @@ const MugurthaNaal = () => {
           date: editEntry.date,
           time: editEntry.time,
           type: editEntry.type,
+          month: editEntry.month,
+          thithi: editEntry.thithi,
+          natchathiram: editEntry.natchathiram,
+          yogam: editEntry.yogam,
+          lagnam: editEntry.lagnam,
           description: formattedDesc,
         })
       })
@@ -173,6 +193,11 @@ const MugurthaNaal = () => {
       time: entry.time || '',
       type: entry.type || 'Valarpirai',
       category: detectedCategory,
+      month: entry.month || 'January',
+      thithi: entry.thithi || '',
+      natchathiram: entry.natchathiram || '',
+      yogam: entry.yogam || '',
+      lagnam: entry.lagnam || '',
       description: desc.replace(/^\[.*?\]\s*/, '')
     })
   }
@@ -277,6 +302,11 @@ const MugurthaNaal = () => {
             date: entryDate,
             time: String(timeStr),
             type: String(rowObj['type'] || 'Valarpirai'),
+            month: String(rowObj['month'] || new Date(entryDate).toLocaleString('en-US', { month: 'long' })),
+            thithi: String(rowObj['thithi'] || ''),
+            natchathiram: String(rowObj['natchathiram'] || ''),
+            yogam: String(rowObj['yogam'] || ''),
+            lagnam: String(rowObj['lagnam'] || ''),
             description: String(rowObj['description'] || rowObj['category'] || 'Suba Mugurtham'),
             _rawPreview: rowObj
           });
@@ -440,6 +470,44 @@ const MugurthaNaal = () => {
                 </select>
               </div>
             </div>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div>
+                <label className="block text-xs uppercase tracking-wider text-gray-400 mb-1 font-bold">Thithi (திதி)</label>
+                <input 
+                  type="text" 
+                  value={newEntry.thithi}
+                  onChange={(e) => setNewEntry({...newEntry, thithi: e.target.value})}
+                  className="w-full bg-black/50 border border-white/15 rounded-lg p-2.5 text-white outline-none focus:border-astrology-gold"
+                />
+              </div>
+              <div>
+                <label className="block text-xs uppercase tracking-wider text-gray-400 mb-1 font-bold">Natchathiram (நட்சத்திரம்)</label>
+                <input 
+                  type="text" 
+                  value={newEntry.natchathiram}
+                  onChange={(e) => setNewEntry({...newEntry, natchathiram: e.target.value})}
+                  className="w-full bg-black/50 border border-white/15 rounded-lg p-2.5 text-white outline-none focus:border-astrology-gold"
+                />
+              </div>
+              <div>
+                <label className="block text-xs uppercase tracking-wider text-gray-400 mb-1 font-bold">Yogam (யோகம்)</label>
+                <input 
+                  type="text" 
+                  value={newEntry.yogam}
+                  onChange={(e) => setNewEntry({...newEntry, yogam: e.target.value})}
+                  className="w-full bg-black/50 border border-white/15 rounded-lg p-2.5 text-white outline-none focus:border-astrology-gold"
+                />
+              </div>
+              <div>
+                <label className="block text-xs uppercase tracking-wider text-gray-400 mb-1 font-bold">Lagnam (லக்னம்)</label>
+                <input 
+                  type="text" 
+                  value={newEntry.lagnam}
+                  onChange={(e) => setNewEntry({...newEntry, lagnam: e.target.value})}
+                  className="w-full bg-black/50 border border-white/15 rounded-lg p-2.5 text-white outline-none focus:border-astrology-gold"
+                />
+              </div>
+            </div>
             <div>
               <label className="block text-xs uppercase tracking-wider text-gray-400 mb-1 font-bold">Additional Notes / Details</label>
               <textarea 
@@ -517,6 +585,56 @@ const MugurthaNaal = () => {
                   <option value="Valarpirai">Valarpirai (வளர்பிறை)</option>
                   <option value="Theipirai">Theipirai (தேய்பிறை)</option>
                 </select>
+              </div>
+              <div>
+                <label className="block text-xs uppercase tracking-wider text-gray-400 mb-1 font-bold">Month</label>
+                <select 
+                  value={editEntry.month}
+                  onChange={(e) => setEditEntry({...editEntry, month: e.target.value})}
+                  className="w-full bg-black/50 border border-white/15 rounded-lg p-2.5 text-white outline-none focus:border-blue-400"
+                >
+                  {['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'].map(m => (
+                    <option key={m} value={m}>{m}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div>
+                <label className="block text-xs uppercase tracking-wider text-gray-400 mb-1 font-bold">Thithi (திதி)</label>
+                <input 
+                  type="text" 
+                  value={editEntry.thithi}
+                  onChange={(e) => setEditEntry({...editEntry, thithi: e.target.value})}
+                  className="w-full bg-black/50 border border-white/15 rounded-lg p-2.5 text-white outline-none focus:border-blue-400"
+                />
+              </div>
+              <div>
+                <label className="block text-xs uppercase tracking-wider text-gray-400 mb-1 font-bold">Natchathiram (நட்சத்திரம்)</label>
+                <input 
+                  type="text" 
+                  value={editEntry.natchathiram}
+                  onChange={(e) => setEditEntry({...editEntry, natchathiram: e.target.value})}
+                  className="w-full bg-black/50 border border-white/15 rounded-lg p-2.5 text-white outline-none focus:border-blue-400"
+                />
+              </div>
+              <div>
+                <label className="block text-xs uppercase tracking-wider text-gray-400 mb-1 font-bold">Yogam (யோகம்)</label>
+                <input 
+                  type="text" 
+                  value={editEntry.yogam}
+                  onChange={(e) => setEditEntry({...editEntry, yogam: e.target.value})}
+                  className="w-full bg-black/50 border border-white/15 rounded-lg p-2.5 text-white outline-none focus:border-blue-400"
+                />
+              </div>
+              <div>
+                <label className="block text-xs uppercase tracking-wider text-gray-400 mb-1 font-bold">Lagnam (லக்னம்)</label>
+                <input 
+                  type="text" 
+                  value={editEntry.lagnam}
+                  onChange={(e) => setEditEntry({...editEntry, lagnam: e.target.value})}
+                  className="w-full bg-black/50 border border-white/15 rounded-lg p-2.5 text-white outline-none focus:border-blue-400"
+                />
               </div>
             </div>
             <div>
