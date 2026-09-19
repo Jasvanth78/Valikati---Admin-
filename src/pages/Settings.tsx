@@ -40,6 +40,12 @@ const Settings = () => {
     { key: 'Disclaimer', label: 'App Disclaimer', icon: <AlertTriangle size={20} /> },
     { key: 'app_share_link', label: '🔗 App Download Link (For Sharing)', icon: <Save size={20} /> },
     { key: 'contact_us', label: 'Contact Us', icon: <FileText size={20} /> },
+    { key: 'adsense_enabled', label: '🛡️ AdSense Enabled', icon: <Shield size={20} />, isToggle: true },
+    { key: 'adsense_unit_id', label: '🆔 AdSense Unit ID', icon: <FileText size={20} />, isSingleInput: true },
+    { key: 'admob_enabled', label: '🛡️ AdMob Enabled', icon: <Shield size={20} />, isToggle: true },
+    { key: 'admob_banner_unit_id', label: '🆔 AdMob Banner Unit ID', icon: <FileText size={20} />, isSingleInput: true },
+    { key: 'admob_rewarded_unit_id', label: '🆔 AdMob Rewarded Unit ID', icon: <FileText size={20} />, isSingleInput: true },
+    { key: 'admob_interstitial_unit_id', label: '🆔 AdMob Interstitial Unit ID', icon: <FileText size={20} />, isSingleInput: true },
   ];
 
   const handleEdit = (item: any) => {
@@ -67,7 +73,7 @@ const Settings = () => {
       </div>
 
       <div className="grid gap-6">
-        {keys.map(({ key, label, icon, isImage }) => {
+        {keys.map(({ key, label, icon, isImage, isToggle, isSingleInput }) => {
           const item = content.find(c => c.key === key) || { key, ta: '', en: '' };
           const isEditing = editingKey === key;
 
@@ -97,6 +103,29 @@ const Settings = () => {
                         value={formData.en || formData.ta}
                         onChange={(url) => setFormData({ ta: url, en: url })}
                         folder="app_settings"
+                      />
+                    </div>
+                  ) : isToggle ? (
+                    <div className="space-y-2">
+                       <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Status</label>
+                       <select 
+                         className="w-full bg-astrology-dark border border-astrology-gold/20 rounded-lg p-4 text-white focus:outline-none focus:border-astrology-gold transition-colors"
+                         value={formData.en}
+                         onChange={(e) => setFormData({ ta: e.target.value, en: e.target.value })}
+                       >
+                         <option value="true">Enabled</option>
+                         <option value="false">Disabled</option>
+                       </select>
+                    </div>
+                  ) : isSingleInput ? (
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Value</label>
+                      <input 
+                        type="text"
+                        className="w-full bg-astrology-dark border border-astrology-gold/20 rounded-lg p-4 text-white focus:outline-none focus:border-astrology-gold transition-colors"
+                        placeholder="Enter value..."
+                        value={formData.en}
+                        onChange={(e) => setFormData({ ta: e.target.value, en: e.target.value })}
                       />
                     </div>
                   ) : (
@@ -152,6 +181,20 @@ const Settings = () => {
                         <span className="text-xs text-gray-500 italic">No image URL configured</span>
                       )}
                       <span className="text-xs text-gray-400 truncate max-w-lg">{item.en || item.ta}</span>
+                    </div>
+                  ) : isToggle ? (
+                    <div className="col-span-2 space-y-2">
+                      <span className="text-[10px] text-astrology-gold/60 font-bold uppercase">Status</span>
+                      <p className="text-sm text-gray-400 italic">
+                        {item.en === 'true' ? 'Enabled' : 'Disabled'}
+                      </p>
+                    </div>
+                  ) : isSingleInput ? (
+                    <div className="col-span-2 space-y-2">
+                      <span className="text-[10px] text-astrology-gold/60 font-bold uppercase">Value</span>
+                      <p className="text-sm text-gray-400 italic">
+                        {item.en || "No content added yet."}
+                      </p>
                     </div>
                   ) : (
                     <>
