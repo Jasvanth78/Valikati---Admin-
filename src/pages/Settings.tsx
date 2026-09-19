@@ -110,7 +110,7 @@ const Settings = () => {
                        <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Status</label>
                        <select 
                          className="w-full bg-astrology-dark border border-astrology-gold/20 rounded-lg p-4 text-white focus:outline-none focus:border-astrology-gold transition-colors"
-                         value={formData.en}
+                         value={formData.en === 'true' ? 'true' : 'false'}
                          onChange={(e) => setFormData({ ta: e.target.value, en: e.target.value })}
                        >
                          <option value="true">Enabled</option>
