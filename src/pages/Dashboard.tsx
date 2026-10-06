@@ -1,13 +1,36 @@
-import React from 'react'
-import { Users, LayoutDashboard, Star } from 'lucide-react'
+import React, { useState, useEffect } from 'react'
+import { Users, LayoutDashboard, Star, UserPlus } from 'lucide-react'
+
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:7005';
 
 const Dashboard = () => {
-  const stats = {
-    totalUsers: 1250,
-    activeUsers: 450,
-    mostSelectedRasi: 'Simmam (Leo)',
-    dailyPredictions: 890
-  }
+  const [stats, setStats] = useState({
+    totalUsers: 0,
+    activeUsers: 0,
+    newUsers: 0,
+    mostSelectedRasi: 'Loading...',
+    dailyPredictions: 0
+  });
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/admin/dashboard`, {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setStats(data);
+        }
+      } catch (error) {
+        console.error('Error fetching dashboard stats:', error);
+      }
+    };
+
+    fetchStats();
+  }, []);
 
   return (
     <div>
@@ -18,8 +41,9 @@ const Dashboard = () => {
         </div>
       </header>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-8">
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 md:gap-6 mb-8">
         <StatCard title="Total Users" value={stats.totalUsers.toLocaleString()} icon={<Users className="text-astrology-gold" />} />
+        <StatCard title="New Users" value={stats.newUsers.toLocaleString()} icon={<UserPlus className="text-astrology-gold" />} />
         <StatCard title="Active Users" value={stats.activeUsers.toLocaleString()} icon={<ActivityIcon className="text-astrology-gold" />} />
         <StatCard title="Top Rasi" value={stats.mostSelectedRasi} icon={<Star className="text-astrology-gold" />} />
         <StatCard title="Predicts Today" value={stats.dailyPredictions.toLocaleString()} icon={<LayoutDashboard className="text-astrology-gold" />} />
