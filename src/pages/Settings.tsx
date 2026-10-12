@@ -32,8 +32,6 @@ const Settings = () => {
   const keys = [
     { key: 'app_name', label: '📱 App Name', icon: <Save size={20} /> },
     { key: 'app_logo_url', label: '🖼️ App Logo URL', icon: <Image size={20} />, isImage: true },
-    { key: 'home_banner_subtitle', label: '🏠 Home Banner Subtitle', icon: <Save size={20} /> },
-    { key: 'home_banner_image_url', label: '🖼️ Home Banner Image URL', icon: <Image size={20} />, isImage: true },
     { key: 'god_quote', label: '✨ Divine Quotes Banner (Hindu, Muslim, Jesus Quotes)', icon: <Save size={20} /> },
     { key: 'terms_and_conditions', label: 'Terms & Conditions', icon: <FileText size={20} /> },
     { key: 'privacy_policy', label: 'Privacy Policy', icon: <Shield size={20} /> },
@@ -55,7 +53,7 @@ const Settings = () => {
 
   const handleSave = async (key: string) => {
     try {
-      await api.put('/app-content', { key, ...formData });
+      await api.put('/app-content', { key, ...formData }, { headers: { Authorization: `Bearer ${localStorage.getItem('adminToken')}` } });
       fetchContent();
       setEditingKey(null);
       alert('Content updated and broadcast live!');

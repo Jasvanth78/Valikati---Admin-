@@ -8,6 +8,8 @@ interface PanchangamEntry {
   date: string
   sunrise: string
   sunset: string
+  moonrise?: string
+  moonset?: string
   tithi?: string
   nakshatram?: string
   yogam?: string
@@ -24,6 +26,8 @@ const emptyForm: PanchangamEntry = {
   date: new Date().toISOString().split('T')[0],
   sunrise: '06:00 AM',
   sunset: '06:00 PM',
+  moonrise: '',
+  moonset: '',
   tithi: '',
   nakshatram: '',
   yogam: '',
@@ -103,6 +107,8 @@ const Panchangam = () => {
       date: formattedDate,
       sunrise: entry.sunrise || '06:00 AM',
       sunset: entry.sunset || '06:00 PM',
+      moonrise: entry.moonrise || '',
+      moonset: entry.moonset || '',
       tithi: entry.tithi || '',
       nakshatram: entry.nakshatram || '',
       yogam: entry.yogam || '',
@@ -251,6 +257,8 @@ const Panchangam = () => {
             date: entryDate,
             sunrise: String(rowObj['sunrise'] || '06:00 AM'),
             sunset: String(rowObj['sunset'] || '06:00 PM'),
+            moonrise: String(rowObj['moonrise'] || ''),
+            moonset: String(rowObj['moonset'] || ''),
             tithi: String(rowObj['tithi'] || ''),
             nakshatram: String(rowObj['nakshatram'] || ''),
             yogam: String(rowObj['yogam'] || ''),
@@ -427,6 +435,12 @@ const Panchangam = () => {
               </div>
             </div>
 
+<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {(['moonrise', 'moonset'] as const).map(field => <div key={field}>
+                <label className="block text-xs uppercase tracking-wider text-blue-400 mb-1 font-bold">{field === 'moonrise' ? 'Moonrise (சந்திர உதயம்)' : 'Moonset (சந்திர அஸ்தமனம்)'}</label>
+                <input type="text" value={formData[field] || ''} onChange={e => setFormData({...formData, [field]: e.target.value})} placeholder="HH:MM AM / PM (optional)" className="w-full bg-black/40 border border-white/10 rounded-lg p-2.5 text-white focus:border-astrology-gold outline-none" />
+              </div>)}
+            </div>
             {/* Thithi & Nakshatram Section */}
             <div className="bg-black/20 p-4 rounded-lg border border-white/5 space-y-4">
               <h4 className="text-sm font-bold text-purple-400 uppercase tracking-wider flex items-center gap-2">
