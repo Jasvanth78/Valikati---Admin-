@@ -12,6 +12,8 @@ import NallaNeram from '../pages/NallaNeram'
 import Settings from '../pages/Settings'
 import AppCards from '../pages/AppCards'
 import Blogs from '../pages/Blogs'
+import PosterPosts from '../pages/PosterPosts'
+import AdManagement from '../pages/AdManagement'
 import Events from '../pages/Events'
 import Admins from '../pages/Admins'
 import VastuSasthiram from '../pages/VastuSasthiram'
@@ -22,7 +24,7 @@ import GovtHolidays from '../pages/GovtHolidays'
 import Proverbs from '../pages/Proverbs'
 import HomeComponents from '../pages/HomeComponents'
 
-const Layout = () => {
+const Layout = ({ adminEmail = '', onLogout }: { adminEmail?: string; onLogout?: () => void }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(window.innerWidth > 768)
   const [activePage, setActivePage] = useState('dashboard')
 
@@ -31,6 +33,8 @@ const Layout = () => {
       case 'dashboard': return <Dashboard />
       case 'home-components': return <HomeComponents />
       case 'blogs': return <Blogs />
+      case 'poster-posts': return <PosterPosts />
+      case 'ad-management': return <AdManagement />
       case 'events': return <Events />
       case 'rasi': return <RasiPalan />
       case 'panchangam': return <Panchangam />
@@ -88,6 +92,8 @@ const Layout = () => {
           <NavItem icon={<LayoutDashboard size={20} />} label="Dashboard" active={activePage === 'dashboard'} onClick={() => navigate('dashboard')} isOpen={isSidebarOpen} />
           <NavItem icon={<Home size={20} />} label="Home Components" active={activePage === 'home-components'} onClick={() => navigate('home-components')} isOpen={isSidebarOpen} />
           <NavItem icon={<BookOpen size={20} className="text-emerald-400" />} label="Blogs" active={activePage === 'blogs'} onClick={() => navigate('blogs')} isOpen={isSidebarOpen} />
+          <NavItem icon={<LayoutGrid size={20} className="text-emerald-300" />} label="Poster Posts" active={activePage === 'poster-posts'} onClick={() => navigate('poster-posts')} isOpen={isSidebarOpen} />
+          <NavItem icon={<Eye size={20} />} label="Ad Management" active={activePage === 'ad-management'} onClick={() => navigate('ad-management')} isOpen={isSidebarOpen} />
           <NavItem icon={<Sparkles size={20} className="text-amber-400" />} label="Upcoming Events" active={activePage === 'events'} onClick={() => navigate('events')} isOpen={isSidebarOpen} />
           <NavItem icon={<Star size={20} />} label="Rasi Palan" active={activePage === 'rasi'} onClick={() => navigate('rasi')} isOpen={isSidebarOpen} />
           <NavItem icon={<Calendar size={20} />} label="Panchangam" active={activePage === 'panchangam'} onClick={() => navigate('panchangam')} isOpen={isSidebarOpen} />
@@ -109,6 +115,7 @@ const Layout = () => {
         </nav>
 
 
+        {onLogout && <div className="border-t border-white/10 px-4 py-3">{isSidebarOpen && <p className="mb-2 truncate text-xs text-gray-400">{adminEmail}</p>}<button aria-label="Sign out" onClick={onLogout} className="w-full rounded-lg border border-astrology-gold/30 p-3 text-astrology-gold">{isSidebarOpen ? 'Sign out' : 'Exit'}</button></div>}
         <button 
           onClick={() => setIsSidebarOpen(!isSidebarOpen)}
           className="p-4 hover:bg-astrology-gold/10 text-astrology-gold transition-colors flex justify-center border-t border-astrology-gold/10"
@@ -117,7 +124,7 @@ const Layout = () => {
         </button>
       </aside>
 
-      <main className={`
+      <main className={`${['ad-management', 'notifications'].includes(activePage) ? 'bg-[#fbf7ee] !p-0' : ''}
         ${isSidebarOpen ? 'md:ml-64' : 'md:ml-20'} 
         flex-1 p-4 md:p-8 transition-all duration-300 w-full
       `}>

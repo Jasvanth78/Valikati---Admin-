@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { Users, LayoutDashboard, Star, UserPlus } from 'lucide-react'
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:7005';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:7006';
 
 const Dashboard = () => {
   const [stats, setStats] = useState({

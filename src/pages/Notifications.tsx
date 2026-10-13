@@ -1,146 +1,118 @@
-import React, { useState } from 'react'
-import { Send, Users, Bell, MessageSquare, History } from 'lucide-react'
-import axios from 'axios'
+import React, { useEffect, useRef, useState } from 'react'
+import { Bell, CalendarDays, Check, ChevronDown, ChevronRight, Clock, FileText, Globe, History, Image, LayoutGrid, Megaphone, Pencil, Plus, Search, Send, Settings, Star, Sun, Trash2, Users, X } from 'lucide-react'
 import { API_BASE_URL } from '../utils/api'
+import './AdManagement.css'
+import './Notifications.css'
 
-const Notifications = () => {
-  const [target, setTarget] = useState('all')
-  const [rasi, setRasi] = useState('Mesham')
-  const [title, setTitle] = useState('')
-  const [message, setMessage] = useState('')
-  const [sending, setSending] = useState(false)
- 
-  const handleSend = async () => {
-    if (!title || !message) return alert('Please enter title and message');
-    
-    setSending(true);
+type Row = Record<string, any>
+const tabs = ['Overview', 'Notification Types', 'Send Notification', 'Scheduled', 'Automation Rules', 'Templates', 'History', 'User Segments']
+const icons = [LayoutGrid, Image, Send, CalendarDays, Settings, FileText, History, Users]
+const categoryIcons: Record<string, typeof Sun> = { rasi: Sun, panchangam: CalendarDays, festivals: Star, poster_posts: Image, articles: FileText, announcements: Megaphone }
+const composeEmpty = () => ({ definitionKey: 'general', title: '', message: '', imageUrl: '', audience: { kind: 'all', userIds: [] as string[] }, destination: 'home', parameters: '{}', schedule: { localAt: '', timezone: 'Asia/Kolkata', repeat: 'once' }, status: 'draft' })
+function Toggle({ label, value, disabled, onChange }: { label: string; value: boolean; disabled?: boolean; onChange: (value: boolean) => void }) { return <label className="ad-toggle"><input type="checkbox" aria-label={label} checked={value} disabled={disabled} onChange={e => onChange(e.target.checked)} /><span /></label> }
+const displayTime = (value?: string) => value ? new Date(value).toLocaleString() : '—'
+const localTime = (value: string, timezone: string) => new Intl.DateTimeFormat('sv-SE', { timeZone: timezone, year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).format(new Date(value)).replace(' ', 'T')
+
+export default function Notifications() {
+  const [dashboard, setDashboard] = useState<Row | null>(null), [tab, setTab] = useState('Overview')
+  const [expanded, setExpanded] = useState<string[]>(['rasi']), [search, setSearch] = useState(''), [category, setCategory] = useState(''), [enabled, setEnabled] = useState('')
+  const [rows, setRows] = useState<Row[]>([]), [page, setPage] = useState(1), [totalPages, setTotalPages] = useState(1), [total, setTotal] = useState(0)
+  const [from, setFrom] = useState(''), [to, setTo] = useState(''), [historyStatus, setHistoryStatus] = useState(''), [legacy, setLegacy] = useState(false)
+  const [busy, setBusy] = useState(false), [loading, setLoading] = useState(true), [error, setError] = useState(''), [notice, setNotice] = useState('')
+  const [drawer, setDrawer] = useState<{ resource: string; data: Row } | null>(null), [confirmation, setConfirmation] = useState<{ text: string; action: () => Promise<void> } | null>(null)
+  const [compose, setCompose] = useState(composeEmpty()), [campaignId, setCampaignId] = useState<string | null>(null)
+  const requestId = useRef(crypto.randomUUID()), [recipients, setRecipients] = useState<Row[]>([]), [recipientSearch, setRecipientSearch] = useState('')
+  const [testUsers, setTestUsers] = useState<string[]>([]), [previewVariables, setPreviewVariables] = useState('{}'), [templatePreview, setTemplatePreview] = useState<Row | null>(null)
+  const generation = useRef(0)
+  const categories: Row[] = dashboard?.categories || [], definitions: Row[] = dashboard?.definitions || [], rules: Row[] = dashboard?.rules || []
+  const resources: Record<string, string> = { Scheduled: 'campaigns', 'Automation Rules': 'rules', Templates: 'templates', History: legacy ? 'legacy-history' : 'logs', 'User Segments': 'segments', Overview: 'definitions', 'Notification Types': 'definitions' }
+  async function api(path: string, method = 'GET', body?: unknown) {
+    const response = await fetch(`${API_BASE_URL}/api/admin/notifications${path}`, { method, headers: { Authorization: `Bearer ${localStorage.getItem('adminToken') || ''}`, 'Content-Type': 'application/json' }, body: body === undefined ? undefined : JSON.stringify(body), signal: AbortSignal.timeout(30000) })
+    if (response.status === 401) window.dispatchEvent(new Event('admin-session-expired'))
+    const data = await response.json(); if (!response.ok) throw Error(data.error || 'Notification request failed'); return data
+  }
+  async function loadDashboard() { const data = await api('/dashboard'); setDashboard(data) }
+  async function loadRows() {
+    const resource = resources[tab]; if (!resource) return
+    const query = new URLSearchParams({ page: String(page), limit: '30', q: search })
+    if (['Overview', 'Notification Types'].includes(tab)) { if (category) query.set('categoryKey', category); if (enabled) query.set('enabled', enabled) }
+    if (tab === 'History') { if (historyStatus) query.set('status', historyStatus); if (from) query.set('from', `${from}T00:00:00Z`); if (to) query.set('to', `${to}T23:59:59Z`) }
+    const current = ++generation.current
+    const data = await api(`/${resource}?${query}`)
+    if (current === generation.current) { setRows(data.items); setTotal(data.total); setTotalPages(data.totalPages || Math.ceil(data.total / 30) || 1) }
+  }
+  useEffect(() => { loadDashboard().catch(e => setError(e.message)).finally(() => setLoading(false)) }, [])
+  useEffect(() => { setPage(1) }, [tab, search, category, enabled, from, to, historyStatus, legacy])
+  useEffect(() => { const timer = setTimeout(() => { loadRows().catch(e => setError(e.message)) }, 200); return () => clearTimeout(timer) }, [tab, page, search, category, enabled, from, to, historyStatus, legacy])
+  useEffect(() => { const timer = setTimeout(() => { api(`/recipients?q=${encodeURIComponent(recipientSearch)}`).then(setRecipients).catch(() => {}) }, 250); return () => clearTimeout(timer) }, [recipientSearch])
+  async function mutate(action: () => Promise<unknown>) {
+    setBusy(true); setError(''); setNotice('')
+    try { await action(); await Promise.all([loadDashboard(), loadRows()]); setNotice(current => current || 'Notification settings saved.'); return true }
+    catch (e) { setError((e as Error).message); return false }
+    finally { setBusy(false) }
+  }
+  function toggleGlobal(value: boolean) {
+    const action = async () => { await mutate(() => api('/global', 'PUT', { isEnabled: value })); setConfirmation(null) }
+    if (!value) setConfirmation({ text: 'Turn OFF all optional push notifications? Automatic and manual sends will stop. Configurations are retained, and missed sends will not replay.', action }); else void action()
+  }
+  function open(resource: string, row?: Row) {
+    const data = row ? { ...row, parameters: JSON.stringify(row.parameters || {}), schedule: row.schedule ? { ...row.schedule, localAt: localTime(row.nextRun || row.schedule.at, row.schedule.timezone) } : { localAt: '', timezone: 'Asia/Kolkata', repeat: 'daily' } } : { name: '', key: '', categoryKey: categories[0]?.key || '', definitionKey: definitions[0]?.key || '', description: '', title: '', message: '', destination: 'home', parameters: '{}', audience: { kind: 'all', userIds: [] }, trigger: resource === 'rules' ? 'scheduled' : 'manual', schedule: { localAt: '', timezone: 'Asia/Kolkata', repeat: 'daily' }, isEnabled: true, userIds: [] }
+    setDrawer({ resource, data }); setTemplatePreview(null); setError('')
+  }
+  function change(key: string, value: unknown) { if (drawer) setDrawer({ ...drawer, data: { ...drawer.data, [key]: value } }) }
+  async function saveDrawer(e: React.FormEvent) {
+    e.preventDefault(); if (!drawer) return
     try {
-      const response = await axios.post(`${API_BASE_URL}/api/admin/send-notification`, {
-        title,
-        body: message,
-        target,
-        rasi: target === 'rasi' ? rasi : null
-      });
-      alert(response.data.message || 'Notification sent!');
-      setTitle('');
-      setMessage('');
-    } catch (error: any) {
-      alert('Failed to send notification: ' + (error.response?.data?.error || error.message));
-    } finally {
-      setSending(false);
-    }
-  };
-
-  const pastNotifications = [
-    { id: 1, title: 'Daily Rasi Palan', target: 'All Users', date: '2026-03-19 08:00 AM' },
-    { id: 2, title: 'Festival Alert: Holi', target: 'All Users', date: '2026-03-18 10:00 AM' },
-    { id: 3, title: 'Special Message', target: 'Mesham', date: '2026-03-17 06:00 PM' },
-  ]
-
-  return (
-    <div className="font-['Inter']">
-      <header className="flex justify-between items-center mb-8 font-['Outfit']">
-        <div>
-          <h2 className="text-3xl font-bold text-astrology-gold">Notification Center</h2>
-          <p className="text-gray-400 font-['Inter']">Send push notifications to your users via Firebase.</p>
-        </div>
-      </header>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Send Form */}
-        <div className="lg:col-span-2 bg-astrology-card p-8 rounded-xl border border-astrology-gold/10 shadow-2xl">
-          <h3 className="text-xl font-bold mb-6 flex items-center gap-2 text-astrology-gold font-['Outfit']">
-            <Send size={20} />
-            Compose Notification
-          </h3>
-          
-          <div className="space-y-6">
-            <div>
-              <label className="block text-sm text-gray-500 mb-2">Target Audience</label>
-              <div className="flex gap-4">
-                {['all', 'rasi', 'individual'].map(opt => (
-                  <button
-                    key={opt}
-                    onClick={() => setTarget(opt)}
-                    className={`px-4 py-2 rounded-lg border capitalize transition-all ${target === opt ? 'bg-astrology-gold/20 border-astrology-gold text-astrology-gold' : 'border-white/10 text-gray-500 hover:border-white/20'}`}
-                  >
-                    {opt}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {target === 'rasi' && (
-              <div>
-                <label className="block text-sm text-gray-500 mb-2">Select Rasi</label>
-                <select 
-                  value={rasi}
-                  onChange={(e) => setRasi(e.target.value)}
-                  className="w-full bg-black/40 border border-white/10 rounded-lg p-3 outline-none focus:border-astrology-gold text-white"
-                >
-                  {[
-                    'Mesham', 'Rishabam', 'Midhunam', 'Kadagam', 
-                    'Simmam', 'Kanni', 'Thulaam', 'Viruchigam', 
-                    'Dhanusu', 'Magaram', 'Kumbam', 'Meenam'
-                  ].map(r => <option key={r} value={r}>{r}</option>)}
-                </select>
-              </div>
-            )}
-
-            <div>
-              <label className="block text-sm text-gray-500 mb-2">Notification Title</label>
-              <input 
-                type="text" 
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder="e.g., Daily Rasi Palan is here!"
-                className="w-full bg-black/40 border border-white/10 rounded-lg p-3 outline-none focus:border-astrology-gold text-white"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm text-gray-500 mb-2">Message Body</label>
-              <textarea 
-                rows={4}
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-                placeholder="Enter your message..."
-                className="w-full bg-black/40 border border-white/10 rounded-lg p-3 outline-none focus:border-astrology-gold text-white resize-none"
-              ></textarea>
-            </div>
-
-            <button 
-              onClick={handleSend}
-              disabled={sending}
-              className="w-full btn-gold py-4 flex items-center justify-center gap-2 text-lg shadow-[0_0_20px_rgba(212,175,55,0.2)] disabled:opacity-50"
-            >
-              <Send size={20} />
-              {sending ? 'Sending...' : 'Send Notification Now'}
-            </button>
-          </div>
-        </div>
-
-        {/* History */}
-        <div className="bg-astrology-card p-6 rounded-xl border border-astrology-gold/10">
-          <h3 className="text-lg font-bold mb-6 flex items-center gap-2 text-astrology-gold font-['Outfit']">
-            <History size={18} />
-            Recent Broadcasts
-          </h3>
-          <div className="space-y-4">
-            {pastNotifications.map(notif => (
-              <div key={notif.id} className="p-4 rounded-lg bg-black/40 border border-white/5 hover:bg-black/60 transition-colors">
-                <div className="text-sm font-bold mb-1">{notif.title}</div>
-                <div className="flex justify-between text-xs text-gray-500">
-                  <span>To: {notif.target}</span>
-                  <span>{notif.date}</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+      const data: Row = { ...drawer.data, parameters: JSON.parse(drawer.data.parameters || '{}') }
+      if (await mutate(() => api(`/${drawer.resource}${data.id ? `/${data.id}` : ''}`, data.id ? 'PUT' : 'POST', data))) setDrawer(null)
+    } catch (_) { setError('Destination parameters must be a valid JSON object.') }
+  }
+  function archive(resource: string, row: Row) { setConfirmation({ text: `Archive “${row.name || row.title}”? Future sends using it will stop. History is retained.`, action: async () => { if (await mutate(() => api(`/${resource}/${row.id}`, 'DELETE'))) setConfirmation(null) } }) }
+  async function upload(file: File) {
+    if (!['image/png', 'image/jpeg', 'image/webp'].includes(file.type) || file.size > 2 * 1024 * 1024) { setError('Upload PNG, JPEG or WEBP up to 2 MB.'); return }
+    setBusy(true)
+    try { const body = new FormData(); body.append('image', file); body.append('folder', 'notifications'); const response = await fetch(`${API_BASE_URL}/api/admin/notifications/upload`, { method: 'POST', headers: { Authorization: `Bearer ${localStorage.getItem('adminToken')}` }, body }); const data = await response.json(); if (!response.ok) throw Error(data.error || 'Upload failed'); setCompose(previous => ({ ...previous, imageUrl: data.url || data.imageUrl })) } catch (e) { setError((e as Error).message) } finally { setBusy(false) }
+  }
+  async function campaignPayload(test = false) {
+    return { ...compose, parameters: JSON.parse(compose.parameters), audience: test ? { kind: 'test', userIds: testUsers } : compose.audience, requestId: test ? crypto.randomUUID() : requestId.current, status: test ? 'draft' : compose.status, isEnabled: true }
+  }
+  async function saveCampaign(test = false, send = false, draft = false) {
+    try {
+      const payload = await campaignPayload(test)
+      if (draft) payload.status = 'draft'
+      await mutate(async () => {
+        const campaign = await api(`/campaigns${campaignId && !test ? `/${campaignId}` : ''}`, campaignId && !test ? 'PUT' : 'POST', payload)
+        if (!test) setCampaignId(campaign.id)
+        if (send || test) { const result = await api(`/campaigns/${campaign.id}/${test ? 'test' : 'send'}`, 'POST'); setNotice(`FCM request: ${result.status}. ${result.accepted || 0} accepted, ${result.failed || 0} failed. Acceptance does not guarantee device delivery.`); if (!test) { setCampaignId(null); requestId.current = crypto.randomUUID(); setCompose(composeEmpty()) } }
+      })
+    } catch (_) { setError('Check destination parameters and selected recipients.') }
+  }
+  async function confirmSend(e: React.FormEvent) {
+    e.preventDefault(); setError('')
+    if (compose.status === 'scheduled') { await saveCampaign(); return }
+    try { const estimate = await api('/estimate', 'POST', { definitionKey: compose.definitionKey, audience: compose.audience }); if (!estimate.allowed) { setError('Global, category or individual notification controls currently block this send.'); return } setConfirmation({ text: `Send “${compose.title}” to approximately ${estimate.count} eligible registered devices (${compose.audience.kind})? Recipient preferences are rechecked before dispatch.`, action: async () => { setConfirmation(null); await saveCampaign(false, true) } }) } catch (e) { setError((e as Error).message) }
+  }
+  function editCampaign(row: Row) { setCompose({ ...composeEmpty(), ...row, parameters: JSON.stringify(row.parameters || {}), schedule: row.schedule ? { ...row.schedule, localAt: localTime(row.nextRun || row.schedule.at, row.schedule.timezone) } : composeEmpty().schedule, status: row.schedule ? 'scheduled' : 'draft' }); setCampaignId(row.id); setTab('Send Notification') }
+  function selectedUsers(value: string[], onChange: (value: string[]) => void) { return <div className="nt-recipient-picker"><input aria-label="Search recipients" placeholder="Search registered users…" value={recipientSearch} onChange={e => setRecipientSearch(e.target.value)} />{recipients.map(user => <label key={user.id}><input type="checkbox" checked={value.includes(user.id)} onChange={e => onChange(e.target.checked ? [...value, user.id] : value.filter(id => id !== user.id))} />{user.name || user.email}<small>{user.email}</small></label>)}{!recipients.length && <small>No registered recipients in this search.</small>}</div> }
+  function audienceEditor(value: Row, onChange: (value: Row) => void) { return <><label>Target Audience<select aria-label="Target audience" value={value.kind} onChange={e => onChange({ kind: e.target.value, userIds: [] })}>{[['all', 'All opted-in users'], ['android', 'Android users'], ['ios', 'iOS users'], ['selected', 'Selected registered users'], ['rasi', 'Selected Rasi'], ['segment', 'User segment'], ['topic', 'Registered topic subscribers']].map(([key, label]) => <option key={key} value={key}>{label}</option>)}</select></label>{value.kind === 'selected' && selectedUsers(value.userIds || [], ids => onChange({ ...value, userIds: ids }))}{value.kind === 'rasi' && <label>Rasi<input required value={value.rasi || ''} onChange={e => onChange({ ...value, rasi: e.target.value })} placeholder="Mesham" /></label>}{value.kind === 'segment' && <label>Segment<select required value={value.segmentId || ''} onChange={e => onChange({ ...value, segmentId: e.target.value })}><option value="">Select segment</option>{dashboard?.segments.map((row: Row) => <option key={row.id} value={row.id}>{row.name}</option>)}</select></label>}{value.kind === 'topic' && <label>Topic name<input required value={value.topic || ''} onChange={e => onChange({ ...value, topic: e.target.value })} /><small>Sends only to registered subscribers, respecting preferences.</small></label>}</> }
+  function scheduleEditor(value: Row, onChange: (value: Row) => void) { return <div className="nt-schedule"><label>Date and time<input aria-label="Scheduled date and time" type="datetime-local" required value={value.localAt || ''} onChange={e => onChange({ ...value, localAt: e.target.value })} /></label><label>Time zone<input aria-label="Time zone" required value={value.timezone} onChange={e => onChange({ ...value, timezone: e.target.value })} placeholder="Asia/Kolkata" /></label><label>Repeat<select value={value.repeat} onChange={e => onChange({ ...value, repeat: e.target.value })}>{['once', 'daily', 'weekly', 'monthly'].map(repeat => <option key={repeat}>{repeat}</option>)}</select></label></div> }
+  function historyTable(items: Row[], compact = false) { return <div className="nt-table-scroll"><table><thead><tr><th>Title</th><th>Type / Source</th><th>Sent / scheduled</th><th>Status</th><th>Recipients</th>{!compact && <><th>FCM accepted</th><th>Failed</th><th>Opens</th></>}</tr></thead><tbody>{items.map(row => <tr key={row.id}><td title={row.message}><strong>{row.title || row.definitionKey}</strong>{row.error && <small>{row.error}</small>}</td><td>{row.definitionKey || 'Legacy inbox'}<small>{row.source || 'Provider result untracked'}</small></td><td>{displayTime(row.finishedAt || row.createdAt)}{row.scheduledAt && <small>Due: {displayTime(row.scheduledAt)}</small>}</td><td><span className={`nt-status status-${row.status}`}>{row.status || 'History only'}</span></td><td>{row.attempted ?? 'Unknown'}</td>{!compact && <><td>{row.accepted ?? 'Unknown'}</td><td>{row.failed ?? 'Unknown'}</td><td>{row.openCount ?? 'Not tracked'}</td></>}</tr>)}</tbody></table>{!items.length && <p className="nt-empty">No notification records yet.</p>}</div> }
+  const draw = drawer?.data, resource = drawer?.resource
+  return <div className="ad-manager notification-manager">
+    <header className="ad-header"><div className="ad-heading"><Bell size={38} /><div><h1>Notification Management</h1><p>Manage all push notifications. Enable/disable, create new, send manually, schedule and view history.</p></div></div><a className="ad-button ad-guide" href="https://firebase.google.com/docs/cloud-messaging" target="_blank" rel="noopener noreferrer">Notification Guide</a></header>
+    {error && <div role="alert" className="ad-message ad-error">{error}<button onClick={() => { loadDashboard().then(loadRows).catch(e => setError(e.message)) }}>Retry</button></div>}{notice && <div role="status" className="ad-message ad-success">{notice}<button aria-label="Dismiss notice" onClick={() => setNotice('')}><X size={14} /></button></div>}
+    <section className="ad-summary"><article className="ad-stat ad-global"><span className="ad-stat-icon"><Globe /></span><div><h2>Push Notifications</h2><p>Master control for optional notifications across the app.</p><small className="ad-enabled">{dashboard?.globalEnabled ? 'Currently Enabled' : 'Currently Disabled'}</small></div><Toggle label="Enable Push Notifications Globally" value={dashboard?.globalEnabled || false} disabled={busy || !dashboard} onChange={toggleGlobal} /></article>{[[FileText, dashboard?.counts.types || 0, 'Notification Types'], [Settings, dashboard?.counts.automations || 0, 'Active Automation Rules'], [Send, dashboard?.counts.sends || 0, 'Total FCM Requests'], [Users, dashboard?.counts.devices || 0, 'Registered Devices']].map(([Icon, value, label]: any) => <article key={label} className="ad-stat"><span className="ad-stat-icon"><Icon /></span><div><strong>{value}</strong><p>{label}</p><small>{label === 'Total FCM Requests' ? `${dashboard?.counts.accepted || 0} accepted · ${dashboard?.counts.failed || 0} failed` : 'Backend data'}</small></div></article>)}</section>
+    <nav className="ad-tabs nt-tabs">{tabs.map((name, i) => { const Icon = icons[i]; return <button key={name} className={tab === name ? 'selected' : ''} onClick={() => setTab(name)}><Icon size={15} />{name}</button> })}</nav>
+    {loading ? <p className="nt-empty">Loading notification controls…</p> : <div className={`nt-workspace ${['Overview', 'Send Notification'].includes(tab) ? '' : 'nt-full'}`}>
+      <div className="nt-main">
+        {['Overview', 'Notification Types'].includes(tab) && <><div className="nt-quick-actions"><button onClick={() => setTab('Send Notification')}><Send /><span><strong>Send New Notification</strong><small>Send immediately or schedule</small></span><ChevronRight size={17} /></button><button onClick={() => open('definitions')}><Plus /><span><strong>Create Notification Type</strong><small>Add an individual notification definition</small></span><ChevronRight size={17} /></button><button aria-label="Create category" onClick={() => open('categories')}><Plus size={18} /> Category</button></div><section className="nt-panel"><div className="nt-panel-heading"><h2>Notification Types <span>{total}</span></h2><div className="nt-filters"><label className="ad-search"><Search size={14} /><input aria-label="Search notification types" placeholder="Search notification types…" value={search} onChange={e => setSearch(e.target.value)} /></label><select aria-label="Filter category" value={category} onChange={e => setCategory(e.target.value)}><option value="">All Categories</option>{categories.map(row => <option key={row.key} value={row.key}>{row.name}</option>)}</select><select aria-label="Filter notification status" value={enabled} onChange={e => setEnabled(e.target.value)}><option value="">All Status</option><option value="true">Enabled</option><option value="false">Disabled</option></select></div></div>{categories.filter(cat => !category || category === cat.key).map(cat => { const Icon = categoryIcons[cat.key] || Bell; const children = rows.filter(row => row.categoryKey === cat.key); return <div key={cat.key} className="nt-category"><div className="nt-category-header"><button className="nt-expand" aria-label={`Expand ${cat.name}`} onClick={() => setExpanded(expanded.includes(cat.key) ? expanded.filter(key => key !== cat.key) : [...expanded, cat.key])}>{expanded.includes(cat.key) ? <ChevronDown size={17} /> : <ChevronRight size={17} />}</button><Icon className={`nt-cat-icon cat-${cat.key}`} size={24} /><button className="nt-category-title" onClick={() => setExpanded(expanded.includes(cat.key) ? expanded.filter(key => key !== cat.key) : [...expanded, cat.key])}><strong>{cat.name}</strong><small>{cat.description}</small></button><span className="nt-count nt-active">{cat.counts?.active || 0} Active</span><span className="nt-count nt-inactive">{cat.counts?.inactive || 0} Inactive</span><Toggle label={`${cat.name} category enabled`} value={cat.isEnabled} disabled={busy} onChange={value => void mutate(() => api(`/categories/${cat.id}/status`, 'PATCH', { isEnabled: value }))} /><button className="ad-icon-button" aria-label={`Edit category ${cat.name}`} onClick={() => open('categories', cat)}><Pencil size={13} /></button></div>{expanded.includes(cat.key) && <div className="nt-definition-list">{children.map(row => { const rule = rules.find(rule => rule.definitionKey === row.key); return <div key={row.id} className="nt-definition"><Icon size={19} /><div><strong>{row.name}</strong><small>{row.description}</small></div><span className="nt-rule-info"><Clock size={12} />{rule?.nextRun ? displayTime(rule.nextRun) : row.trigger.replaceAll('_', ' ')}</span><span className="nt-rule-info"><Users size={12} />{row.audience?.kind || 'all'}</span><Toggle label={`${row.name} enabled`} value={row.isEnabled} disabled={busy} onChange={value => void mutate(() => api(`/definitions/${row.id}/status`, 'PATCH', { isEnabled: value }))} /><button className="ad-icon-button" aria-label={`Edit ${row.name}`} onClick={() => open('definitions', row)}><Pencil size={13} /></button><button className="ad-icon-button ad-delete" aria-label={`Archive ${row.name}`} onClick={() => archive('definitions', row)}><Trash2 size={13} /></button></div> })}{!children.length && <p className="nt-empty">No matching types on this page. <button onClick={() => open('definitions')}>Create one</button></p>}</div>}</div> })}<div className="nt-pagination"><span>{total} types · Page {page}</span><button disabled={page <= 1} onClick={() => setPage(page - 1)}>Previous</button><button disabled={page >= totalPages} onClick={() => setPage(page + 1)}>Next</button></div></section>{tab === 'Overview' && <div className="nt-bottom-panels"><section className="nt-panel"><div className="nt-panel-heading"><h2>Recent Notifications</h2><button onClick={() => setTab('History')}>View all →</button></div>{historyTable(dashboard?.recent.items || [], true)}</section><section className="nt-panel"><div className="nt-panel-heading"><h2>Upcoming Scheduled</h2><button onClick={() => setTab('Scheduled')}>View all →</button></div>{(dashboard?.scheduled.items || []).map((row: Row) => <div key={row.id} className="nt-scheduled-preview"><strong>{row.title}</strong><small>{displayTime(row.nextRun)}</small><span className="nt-status">Scheduled</span></div>)}{!dashboard?.scheduled.items.length && <p className="nt-empty">No upcoming scheduled notifications.</p>}</section></div>}</>}
+        {tab === 'Send Notification' && <section className="nt-panel nt-help"><h2>Compose a push notification</h2><p>Use the composer to save a draft, send to selected test recipients, schedule, or confirm a bulk send.</p><p>FCM accepting a request does not confirm device delivery. Global, category, individual and recipient controls are always checked.</p><h3>Available templates</h3>{dashboard?.templates.map((template: Row) => <button key={template.id} className="ad-button" onClick={() => setCompose({ ...compose, title: template.title, message: template.message })}>{template.name}</button>)}</section>}
+        {['Scheduled', 'Automation Rules', 'Templates', 'User Segments'].includes(tab) && <section className="nt-panel"><div className="nt-panel-heading"><h2>{tab}</h2><button className="ad-button ad-primary" onClick={() => tab === 'Scheduled' ? setTab('Send Notification') : open(resources[tab])}><Plus size={15} />Create {tab === 'Scheduled' ? 'campaign' : tab === 'Automation Rules' ? 'rule' : tab === 'Templates' ? 'template' : 'segment'}</button></div><div className="nt-table-scroll"><table><thead><tr><th>Name / Title</th><th>Details</th><th>Next / Last execution</th><th>Status</th><th>Actions</th></tr></thead><tbody>{rows.map(row => <tr key={row.id}><td><strong>{row.name || row.title}</strong><small>{row.definitionKey || row.description}</small></td><td>{row.trigger || row.schedule?.repeat || (row.userIds ? `${row.userIds.length} users` : row.title)}<small>{row.schedule?.timezone || row.message}</small></td><td>{displayTime(row.nextRun)}<small>Last: {displayTime(row.lastRun)} {row.lastStatus || ''}</small></td><td><Toggle label={`${row.name || row.title} enabled`} value={row.isEnabled} disabled={busy || (tab === 'Scheduled' && !['draft', 'scheduled', 'paused', 'sending'].includes(row.status))} onChange={value => void mutate(() => api(`/${resources[tab]}/${row.id}/status`, 'PATCH', { isEnabled: value }))} /><small>{row.status || (row.isEnabled ? 'ON' : 'OFF')}</small></td><td><div className="ad-actions"><button className="ad-icon-button" aria-label={`Edit ${row.name || row.title}`} onClick={() => tab === 'Scheduled' ? editCampaign(row) : open(resources[tab], row)}><Pencil size={13} /></button><button className="ad-icon-button ad-delete" aria-label={`Archive ${row.name || row.title}`} onClick={() => archive(resources[tab], row)}><Trash2 size={13} /></button>{tab === 'Automation Rules' && <button className="ad-button" onClick={() => { setTab('History'); setSearch(row.definitionKey) }}>History</button>}</div></td></tr>)}</tbody></table>{!rows.length && <p className="nt-empty">Nothing configured yet.</p>}</div><div className="nt-pagination"><span>{total} records</span><button disabled={page <= 1} onClick={() => setPage(page - 1)}>Previous</button><button disabled={page >= totalPages} onClick={() => setPage(page + 1)}>Next</button></div></section>}
+        {tab === 'History' && <section className="nt-panel"><div className="nt-panel-heading"><h2>Notification History</h2><button className="ad-button" onClick={() => setLegacy(!legacy)}>{legacy ? 'FCM send history' : 'Existing inbox history'}</button></div><div className="nt-filters nt-history-filters"><input aria-label="Search history" placeholder="Search titles or types" value={search} onChange={e => setSearch(e.target.value)} /><input aria-label="History from date" type="date" value={from} onChange={e => setFrom(e.target.value)} /><input aria-label="History to date" type="date" value={to} onChange={e => setTo(e.target.value)} /><select aria-label="History status" value={historyStatus} onChange={e => setHistoryStatus(e.target.value)}><option value="">All statuses</option>{['accepted', 'partial', 'failed', 'skipped', 'stopped', 'unknown', 'no_recipients'].map(status => <option key={status}>{status}</option>)}</select></div><p className="nt-terminology">{legacy ? 'Existing inbox records are preserved. Their provider delivery results were not tracked.' : 'Accepted means accepted by FCM, not confirmed device delivery. Unknown requests are never automatically replayed.'}</p>{historyTable(rows)}<div className="nt-pagination"><span>{total} records</span><button disabled={page <= 1} onClick={() => setPage(page - 1)}>Previous</button><button disabled={page >= totalPages} onClick={() => setPage(page + 1)}>Next</button></div></section>}
       </div>
-    </div>
-  )
+      {['Overview', 'Send Notification'].includes(tab) && <aside className="nt-panel nt-composer"><div className="nt-panel-heading"><Send size={22} /><h2>Send Push Notification</h2></div><form onSubmit={confirmSend}><label>Notification Type <em>*</em><select aria-label="Notification type" value={compose.definitionKey} onChange={e => { const definition = definitions.find(row => row.key === e.target.value); setCompose({ ...compose, definitionKey: e.target.value, title: definition?.title || '', message: definition?.message || '', destination: definition?.destination || 'home' }) }}>{definitions.map(row => <option key={row.key} value={row.key}>{row.name}</option>)}</select></label><label>Title <em>*</em><input aria-label="Notification title" required maxLength={200} value={compose.title} onChange={e => setCompose({ ...compose, title: e.target.value })} /><small className="nt-counter">{compose.title.length}/200</small></label><label>Message <em>*</em><textarea aria-label="Notification message" required maxLength={1000} rows={4} value={compose.message} onChange={e => setCompose({ ...compose, message: e.target.value })} /><small className="nt-counter">{compose.message.length}/1000</small></label><label className="nt-upload">Image (Optional)<input type="file" aria-label="Notification image" accept="image/png,image/jpeg,image/webp" disabled={busy} onChange={e => { if (e.target.files?.[0]) void upload(e.target.files[0]) }} /><small>PNG, JPG, WEBP · Max 2 MB</small>{compose.imageUrl && <img src={compose.imageUrl.startsWith('/') ? `${API_BASE_URL}${compose.imageUrl}` : compose.imageUrl} alt="Uploaded notification" />}</label>{audienceEditor(compose.audience, audience => setCompose({ ...compose, audience: audience as any }))}<label>Destination Page<select aria-label="Destination page" value={compose.destination} onChange={e => setCompose({ ...compose, destination: e.target.value })}>{dashboard?.destinations.map((screen: string) => <option key={screen} value={screen}>{screen.replaceAll('_', ' ')}</option>)}</select></label><details><summary>Advanced destination and test recipients</summary><label>Destination parameters (JSON)<textarea aria-label="Destination parameters" value={compose.parameters} onChange={e => setCompose({ ...compose, parameters: e.target.value })} placeholder={'{"articleId":"…"}'} /></label><p>Choose up to five recipients for Send Test.</p>{selectedUsers(testUsers, setTestUsers)}</details><div className="nt-send-options"><label><input type="radio" name="send-mode" checked={compose.status === 'draft'} onChange={() => setCompose({ ...compose, status: 'draft' })} />Send Now</label><label><input type="radio" name="send-mode" checked={compose.status === 'scheduled'} onChange={() => setCompose({ ...compose, status: 'scheduled' })} />Schedule for Later</label></div>{compose.status === 'scheduled' && scheduleEditor(compose.schedule, schedule => setCompose({ ...compose, schedule: schedule as any }))}<div className="nt-phone-preview"><div><Bell size={13} /> Valikati <small>now</small></div><strong>{compose.title || 'Notification title'}</strong><p>{compose.message || 'Your message will appear here.'}</p></div><div className="nt-compose-actions"><button type="button" className="ad-button" disabled={busy} onClick={() => void saveCampaign(false, false, true)}>Save Draft</button><button type="button" className="ad-button" disabled={busy || !compose.title || !compose.message || !testUsers.length} onClick={() => void saveCampaign(true)}>Send Test</button><button className="ad-button ad-primary" disabled={busy || !dashboard}><Send size={14} />{compose.status === 'scheduled' ? 'Schedule Notification' : 'Send Notification'}</button></div></form></aside>}
+    </div>}
+    {drawer && draw && <div className="nt-drawer-backdrop"><aside className="nt-drawer" role="dialog" aria-modal="true" aria-label={`Edit ${resource}`}><div className="nt-panel-heading"><h2>{draw.id ? 'Edit' : 'Create'} {resource === 'definitions' ? 'Notification Type' : resource?.slice(0, -1)}</h2><button className="ad-icon-button" aria-label="Close editor" onClick={() => setDrawer(null)}><X size={18} /></button></div><form onSubmit={saveDrawer}><label>Name<input aria-label="Record name" required maxLength={100} value={draw.name} onChange={e => change('name', e.target.value)} /></label>{['categories', 'definitions'].includes(resource!) && <label>Unique key<input aria-label="Notification key" required disabled={!!draw.id} pattern="[a-z][a-z0-9_-]{1,79}" value={draw.key} onChange={e => change('key', e.target.value)} /></label>}<label>Description<textarea value={draw.description || ''} maxLength={500} onChange={e => change('description', e.target.value)} /></label>{resource === 'definitions' && <label>Category<select aria-label="Notification category" value={draw.categoryKey} onChange={e => change('categoryKey', e.target.value)}>{categories.map(cat => <option key={cat.key} value={cat.key}>{cat.name}</option>)}</select></label>}{['definitions', 'templates'].includes(resource!) && <><label>Default title<input aria-label="Default title" required value={draw.title} maxLength={200} onChange={e => change('title', e.target.value)} /></label><label>Default message<textarea aria-label="Default message" required value={draw.message} maxLength={1000} onChange={e => change('message', e.target.value)} /></label></>}{['definitions', 'rules'].includes(resource!) && <label>Trigger<select aria-label="Notification trigger" value={draw.trigger} onChange={e => change('trigger', e.target.value)}>{dashboard?.triggers.filter((trigger: string) => resource !== 'rules' || trigger !== 'manual').map((trigger: string) => <option key={trigger}>{trigger}</option>)}</select><small>Only registered backend events can trigger automatic sends.</small></label>}{resource === 'definitions' && <><label>Image URL<input value={draw.imageUrl || ''} onChange={e => change('imageUrl', e.target.value)} placeholder="https://…" /></label><label>Destination<select value={draw.destination} onChange={e => change('destination', e.target.value)}>{dashboard?.destinations.map((screen: string) => <option key={screen}>{screen}</option>)}</select></label><details><summary>Destination parameters</summary><textarea value={draw.parameters} onChange={e => change('parameters', e.target.value)} /></details></>}{resource === 'rules' && <><label>Notification Type<select value={draw.definitionKey} onChange={e => change('definitionKey', e.target.value)}>{definitions.map(row => <option key={row.key} value={row.key}>{row.name}</option>)}</select></label><label>Template<select value={draw.templateId || ''} onChange={e => change('templateId', e.target.value)}><option value="">Use type’s default message</option>{dashboard?.templates.map((row: Row) => <option key={row.id} value={row.id}>{row.name}</option>)}</select></label>{draw.trigger === 'scheduled' && scheduleEditor(draw.schedule, value => change('schedule', value))}</>}{['definitions', 'rules'].includes(resource!) && <details open><summary>Target audience</summary>{audienceEditor(draw.audience, value => change('audience', value))}</details>}{resource === 'segments' && selectedUsers(draw.userIds || [], value => change('userIds', value))}{resource === 'templates' && <details open><summary>Template preview</summary><small>Variables: {dashboard?.variables.map((name: string) => `{${name}}`).join(', ')}</small><label>Sample variable values (JSON)<textarea value={previewVariables} onChange={e => setPreviewVariables(e.target.value)} /></label><button type="button" className="ad-button" onClick={() => { try { api('/templates/preview', 'POST', { title: draw.title, message: draw.message, variables: JSON.parse(previewVariables) }).then(setTemplatePreview).catch(e => setError(e.message)) } catch (_) { setError('Enter valid JSON variable values') } }}>Preview Template</button>{templatePreview && <div className="nt-phone-preview"><strong>{templatePreview.title}</strong><p>{templatePreview.message}</p></div>}</details>}<div className="nt-editor-toggle"><Toggle label="Record enabled" value={draw.isEnabled} onChange={value => change('isEnabled', value)} /><span>Enable this {resource === 'definitions' ? 'notification' : 'configuration'}</span></div>{error && <p role="alert" className="nt-error-text">{error}</p>}<div className="nt-compose-actions"><button type="button" className="ad-button" onClick={() => setDrawer(null)}>Cancel</button><button disabled={busy} className="ad-button ad-primary">Save Changes</button></div></form></aside></div>}
+    {confirmation && <div className="ad-modal-backdrop"><div role="dialog" aria-modal="true" aria-label="Confirm notification action" className="ad-modal"><h2>Confirm notification action</h2><p>{confirmation.text}</p><div className="ad-modal-buttons"><button className="ad-button" onClick={() => setConfirmation(null)}>Cancel</button><button className="ad-button ad-primary" disabled={busy} onClick={confirmation.action}>Confirm</button></div></div></div>}
+  </div>
 }
-
-export default Notifications

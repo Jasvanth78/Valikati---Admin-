@@ -13,7 +13,7 @@ interface Reel {
   isEnabled: boolean;
 }
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:7005';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:7006';
 const API_URL = `${API_BASE_URL}/api`;
 
 const Reels = () => {

@@ -80,8 +80,9 @@ const Settings = () => {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3 text-astrology-gold">
                   {icon}
-                  <h3 className="text-lg font-bold">{label}</h3>
+                  <h3 className="text-lg font-bold">{label}{key.startsWith('admob_') ? ' (Legacy app builds)' : ''}</h3>
                 </div>
+                {key.startsWith('admob_') && <p className="text-xs text-gray-400">For upgraded apps, use the Ad Management sidebar to control global, page and placement settings.</p>}
                 {!isEditing && (
                   <button 
                     onClick={() => handleEdit(item)}

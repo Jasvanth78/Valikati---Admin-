@@ -1,7 +1,7 @@
 export const API_BASE_URL = (import.meta as any).env.VITE_API_URL ||
   (typeof window !== 'undefined'
-    ? `${window.location.protocol}//${window.location.hostname}:7005`
-    : 'http://localhost:7005');
+    ? `${window.location.protocol}//${window.location.hostname}:7006`
+    : 'http://localhost:7006');
 
 export async function fetchApi(path: string, options: RequestInit = {}) {
   const response = await fetch(`${API_BASE_URL}${path}`, {
@@ -9,6 +9,7 @@ export async function fetchApi(path: string, options: RequestInit = {}) {
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${localStorage.getItem('adminToken')}`, ...options.headers },
   });
   const data = await response.json().catch(() => null);
+  if (response.status === 401) window.dispatchEvent(new Event('admin-session-expired'));
   if (!response.ok || data === null) throw new Error(data?.error || data?.message || `Backend request failed (${response.status}).`);
   return data;
 }
