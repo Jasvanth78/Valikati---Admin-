@@ -8,16 +8,16 @@ export default {
     extend: {
       colors: {
         astrology: {
-          dark: '#0a0a0a',
-          gold: '#d4af37',
-          'gold-light': '#f1c40f',
-          'gold-dark': '#996515',
-          card: '#1a1a1a',
+          dark: '#f5f7f8',
+          gold: '#147d70',
+          'gold-light': '#199686',
+          'gold-dark': '#106658',
+          card: '#ffffff',
         }
       },
       backgroundImage: {
-        'astrology-gradient': 'linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%)',
-        'gold-gradient': 'linear-gradient(135deg, #d4af37 0%, #996515 100%)',
+        'astrology-gradient': 'linear-gradient(135deg, #f5f7f8 0%, #ffffff 100%)',
+        'gold-gradient': 'linear-gradient(135deg, #147d70 0%, #106658 100%)',
       }
     },
   },

@@ -1,224 +1,82 @@
-import React, { useState, useEffect } from 'react';
-import { Save, AlertTriangle, FileText, Shield, Image } from 'lucide-react';
-import axios from 'axios';
-import { API_BASE_URL } from '../utils/api';
-import { ImageUploader } from '../components/ImageUploader';
+import { useEffect, useState } from 'react'
+import { Save, Image, FileText, Shield, Smartphone, Bell, Link, Quote, Mail, Pencil, Check, Search, RefreshCw, Loader2, AlertTriangle } from 'lucide-react'
+import axios from 'axios'
+import { API_BASE_URL } from '../utils/api'
+import { ImageUploader } from '../components/ImageUploader'
+import NotificationIconPicker, { parseNotificationIcon } from '../components/NotificationIconPicker'
 
-const api = axios.create({
-  baseURL: `${API_BASE_URL}/api/admin`
-});
+const api = axios.create({ baseURL: `${API_BASE_URL}/api/admin` })
+const groups = ['Brand', 'Content', 'Legal', 'Advertising'] as const
+type Group = typeof groups[number]
+type Item = { key: string; ta: string; en: string }
+type Setting = { key: string; label: string; group: Group; icon: typeof Image; kind?: 'image' | 'single' | 'toggle'; options?: { value: string; label: string }[] }
+const settings: Setting[] = [
+  { key: 'app_name', label: 'App name', group: 'Brand', icon: Smartphone },
+  { key: 'app_logo_url', label: 'App logo', group: 'Brand', icon: Image, kind: 'image' },
+  { key: 'launcher_icon', label: 'Android Home-screen Icon', group: 'Brand', icon: Smartphone, options: [{ value: 'default', label: 'Original logo' }, { value: 'emerald', label: 'Logo with emerald frame' }, { value: 'gold', label: 'Logo with gold frame' }] },
+  { key: 'notification_icon', label: 'Android Notification-bar Icon', group: 'Brand', icon: Bell, options: [{ value: 'ic_notification', label: 'Original icon' }, { value: 'ic_notification_star', label: 'Star' }, { value: 'ic_notification_compass', label: 'Compass' }] },
+  { key: 'app_share_link', label: 'App download link', group: 'Brand', icon: Link, kind: 'single' },
+  { key: 'god_quote', label: 'Divine quotes', group: 'Content', icon: Quote },
+  { key: 'contact_us', label: 'Contact us', group: 'Content', icon: Mail },
+  { key: 'terms_and_conditions', label: 'Terms & Conditions', group: 'Legal', icon: FileText },
+  { key: 'privacy_policy', label: 'Privacy Policy', group: 'Legal', icon: Shield },
+  { key: 'Disclaimer', label: 'App Disclaimer', group: 'Legal', icon: AlertTriangle },
+  { key: 'adsense_enabled', label: 'AdSense enabled', group: 'Advertising', icon: Shield, kind: 'toggle' },
+  { key: 'adsense_unit_id', label: 'AdSense unit ID', group: 'Advertising', icon: FileText, kind: 'single' },
+  { key: 'admob_enabled', label: 'AdMob enabled', group: 'Advertising', icon: Shield, kind: 'toggle' },
+  ...['banner', 'rewarded', 'interstitial'].map(type => ({ key: `admob_${type}_unit_id`, label: `AdMob ${type} unit ID`, group: 'Advertising' as Group, icon: FileText, kind: 'single' as const })),
+]
 
-const Settings = () => {
-  const [content, setContent] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [editingKey, setEditingKey] = useState<string | null>(null);
-  const [formData, setFormData] = useState({ ta: '', en: '' });
-
-  useEffect(() => {
-    fetchContent();
-  }, []);
-
-  const fetchContent = async () => {
+export default function Settings() {
+  const [content, setContent] = useState<Item[]>([])
+  const [loading, setLoading] = useState(true), [saving, setSaving] = useState(false)
+  const [uploadingIcon, setUploadingIcon] = useState(false)
+  const [group, setGroup] = useState<Group>('Brand'), [query, setQuery] = useState('')
+  const [editingKey, setEditingKey] = useState<string | null>(null)
+  const [form, setForm] = useState({ ta: '', en: '' })
+  const [error, setError] = useState(''), [notice, setNotice] = useState('')
+  async function load() {
+    setLoading(true); setError('')
+    try { const { data } = await api.get('/app-content'); setContent(data) }
+    catch { setError('Could not load settings. Please retry.') }
+    finally { setLoading(false) }
+  }
+  useEffect(() => { void load() }, [])
+  function edit(setting: Setting, item: Item) {
+    if (uploadingIcon || saving) return;
+    const fallback = setting.options?.[0].value || (setting.kind === 'toggle' ? 'false' : '')
+    setEditingKey(setting.key); setForm({ ta: item.ta || fallback, en: item.en || fallback }); setNotice(''); setError('')
+  }
+  async function save(key: string) {
+    if (uploadingIcon || saving) return;
+    setSaving(true); setError('')
     try {
-      const { data } = await api.get('/app-content');
-      setContent(data);
-    } catch (error) {
-      console.error('Error fetching content:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const keys = [
-    { key: 'app_name', label: '📱 App Name', icon: <Save size={20} /> },
-    { key: 'app_logo_url', label: '🖼️ App Logo URL', icon: <Image size={20} />, isImage: true },
-    { key: 'god_quote', label: '✨ Divine Quotes Banner (Hindu, Muslim, Jesus Quotes)', icon: <Save size={20} /> },
-    { key: 'terms_and_conditions', label: 'Terms & Conditions', icon: <FileText size={20} /> },
-    { key: 'privacy_policy', label: 'Privacy Policy', icon: <Shield size={20} /> },
-    { key: 'Disclaimer', label: 'App Disclaimer', icon: <AlertTriangle size={20} /> },
-    { key: 'app_share_link', label: '🔗 App Download Link (For Sharing)', icon: <Save size={20} /> },
-    { key: 'contact_us', label: 'Contact Us', icon: <FileText size={20} /> },
-    { key: 'adsense_enabled', label: '🛡️ AdSense Enabled', icon: <Shield size={20} />, isToggle: true },
-    { key: 'adsense_unit_id', label: '🆔 AdSense Unit ID', icon: <FileText size={20} />, isSingleInput: true },
-    { key: 'admob_enabled', label: '🛡️ AdMob Enabled', icon: <Shield size={20} />, isToggle: true },
-    { key: 'admob_banner_unit_id', label: '🆔 AdMob Banner Unit ID', icon: <FileText size={20} />, isSingleInput: true },
-    { key: 'admob_rewarded_unit_id', label: '🆔 AdMob Rewarded Unit ID', icon: <FileText size={20} />, isSingleInput: true },
-    { key: 'admob_interstitial_unit_id', label: '🆔 AdMob Interstitial Unit ID', icon: <FileText size={20} />, isSingleInput: true },
-  ];
-
-  const handleEdit = (item: any) => {
-    setEditingKey(item.key);
-    setFormData({ ta: item.ta || '', en: item.en || '' });
-  };
-
-  const handleSave = async (key: string) => {
-    try {
-      await api.put('/app-content', { key, ...formData }, { headers: { Authorization: `Bearer ${localStorage.getItem('adminToken')}` } });
-      fetchContent();
-      setEditingKey(null);
-      alert('Content updated and broadcast live!');
-    } catch (error) {
-      alert('Failed to update content');
-    }
-  };
-
-  if (loading) return <div className="p-8 text-center text-astrology-gold">Connecting to the stars...</div>;
-
-  return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-3xl font-bold bg-gold-gradient bg-clip-text text-transparent italic">App Content Management</h2>
-      </div>
-
-      <div className="grid gap-6">
-        {keys.map(({ key, label, icon, isImage, isToggle, isSingleInput }) => {
-          const item = content.find(c => c.key === key) || { key, ta: '', en: '' };
-          const isEditing = editingKey === key;
-
-          return (
-            <div key={key} className="bg-astrology-card border border-astrology-gold/20 rounded-xl p-6 space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3 text-astrology-gold">
-                  {icon}
-                  <h3 className="text-lg font-bold">{label}{key.startsWith('admob_') ? ' (Legacy app builds)' : ''}</h3>
-                </div>
-                {key.startsWith('admob_') && <p className="text-xs text-gray-400">For upgraded apps, use the Ad Management sidebar to control global, page and placement settings.</p>}
-                {!isEditing && (
-                  <button 
-                    onClick={() => handleEdit(item)}
-                    className="px-4 py-2 border border-astrology-gold/40 text-astrology-gold rounded-lg hover:bg-astrology-gold/10 transition-all text-sm"
-                  >
-                    Edit Content
-                  </button>
-                )}
-              </div>
-
-              {isEditing ? (
-                <div className="space-y-4 animate-in fade-in slide-in-from-top-4">
-                  {isImage ? (
-                    <div className="space-y-3">
-                      <ImageUploader 
-                        label={label}
-                        value={formData.en || formData.ta}
-                        onChange={(url) => setFormData({ ta: url, en: url })}
-                        folder="app_settings"
-                      />
-                    </div>
-                  ) : isToggle ? (
-                    <div className="space-y-2">
-                       <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Status</label>
-                       <select 
-                         className="w-full bg-astrology-dark border border-astrology-gold/20 rounded-lg p-4 text-white focus:outline-none focus:border-astrology-gold transition-colors"
-                         value={formData.en === 'true' ? 'true' : 'false'}
-                         onChange={(e) => setFormData({ ta: e.target.value, en: e.target.value })}
-                       >
-                         <option value="true">Enabled</option>
-                         <option value="false">Disabled</option>
-                       </select>
-                    </div>
-                  ) : isSingleInput ? (
-                    <div className="space-y-2">
-                      <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Value</label>
-                      <input 
-                        type="text"
-                        className="w-full bg-astrology-dark border border-astrology-gold/20 rounded-lg p-4 text-white focus:outline-none focus:border-astrology-gold transition-colors"
-                        placeholder="Enter value..."
-                        value={formData.en}
-                        onChange={(e) => setFormData({ ta: e.target.value, en: e.target.value })}
-                      />
-                    </div>
-                  ) : (
-                    <div className="grid md:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Tamil Version</label>
-                        <textarea 
-                          className="w-full h-48 bg-astrology-dark border border-astrology-gold/20 rounded-lg p-4 text-white focus:outline-none focus:border-astrology-gold transition-colors resize-none"
-                          placeholder="Enter Tamil content..."
-                          value={formData.ta}
-                          onChange={(e) => setFormData({ ...formData, ta: e.target.value })}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">English Version</label>
-                        <textarea 
-                          className="w-full h-48 bg-astrology-dark border border-astrology-gold/20 rounded-lg p-4 text-white focus:outline-none focus:border-astrology-gold transition-colors resize-none"
-                          placeholder="Enter English content..."
-                          value={formData.en}
-                          onChange={(e) => setFormData({ ...formData, en: e.target.value })}
-                        />
-                      </div>
-                    </div>
-                  )}
-                  <div className="flex justify-end gap-3">
-                    <button 
-                      onClick={() => setEditingKey(null)}
-                      className="px-6 py-2 text-gray-400 hover:text-white transition-colors"
-                    >
-                      Cancel
-                    </button>
-                    <button 
-                      onClick={() => handleSave(key)}
-                      className="px-6 py-2 bg-gold-gradient text-astrology-dark font-bold rounded-lg hover:shadow-[0_0_20px_rgba(212,175,55,0.3)] transition-all flex items-center gap-2"
-                    >
-                      <Save size={18} />
-                      Save & Publish Live
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <div className="grid md:grid-cols-2 gap-6 p-4 bg-astrology-dark/50 rounded-lg border border-white/5">
-                  {isImage ? (
-                    <div className="col-span-2 flex items-center gap-4">
-                      {item.en || item.ta ? (
-                        <img 
-                          src={item.en || item.ta} 
-                          alt="preview" 
-                          className="h-16 w-24 object-cover rounded-lg border border-white/10" 
-                          onError={(e) => (e.currentTarget.style.display = 'none')}
-                        />
-                      ) : (
-                        <span className="text-xs text-gray-500 italic">No image URL configured</span>
-                      )}
-                      <span className="text-xs text-gray-400 truncate max-w-lg">{item.en || item.ta}</span>
-                    </div>
-                  ) : isToggle ? (
-                    <div className="col-span-2 space-y-2">
-                      <span className="text-[10px] text-astrology-gold/60 font-bold uppercase">Status</span>
-                      <p className="text-sm text-gray-400 italic">
-                        {item.en === 'true' ? 'Enabled' : 'Disabled'}
-                      </p>
-                    </div>
-                  ) : isSingleInput ? (
-                    <div className="col-span-2 space-y-2">
-                      <span className="text-[10px] text-astrology-gold/60 font-bold uppercase">Value</span>
-                      <p className="text-sm text-gray-400 italic">
-                        {item.en || "No content added yet."}
-                      </p>
-                    </div>
-                  ) : (
-                    <>
-                      <div className="space-y-2">
-                        <span className="text-[10px] text-astrology-gold/60 font-bold uppercase">Tamil Preview</span>
-                        <p className="text-sm text-gray-400 line-clamp-3 italic">
-                          {item.ta || "No content added yet."}
-                        </p>
-                      </div>
-                      <div className="space-y-2">
-                        <span className="text-[10px] text-astrology-gold/60 font-bold uppercase">English Preview</span>
-                        <p className="text-sm text-gray-400 line-clamp-3 italic">
-                          {item.en || "No content added yet."}
-                        </p>
-                      </div>
-                    </>
-                  )}
-                </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-};
-
-export default Settings;
+      await api.put('/app-content', { key, ...form }, { headers: { Authorization: `Bearer ${localStorage.getItem('adminToken')}` } })
+      setContent(previous => [...previous.filter(item => item.key !== key), { key, ...form }])
+      setEditingKey(null); setNotice('Changes saved and published.')
+    } catch { setError('Could not save changes. Please retry.') }
+    finally { setSaving(false) }
+  }
+  const visible = settings.filter(setting => query.trim() ? setting.label.toLowerCase().includes(query.toLowerCase().trim()) : setting.group === group)
+  return <div className="space-y-6">
+    <header className="flex items-center justify-between gap-4"><div><p className="text-[10px] uppercase tracking-wider text-gray-500 mb-2">System preferences</p><h2 className="font-semibold">App settings</h2></div><button className="icon-button" title="Refresh settings" aria-label="Refresh settings" disabled={loading || saving} onClick={() => void load()}><RefreshCw size={16} className={loading ? 'animate-spin' : ''} /></button></header>
+    <div className="settings-tabs" role="tablist" aria-label="Settings categories">{groups.map(value => <button role="tab" key={value} aria-selected={group === value && !query} onClick={() => { setGroup(value); setQuery('') }}>{value}</button>)}</div>
+    <div className="flex flex-wrap justify-between items-center gap-4"><div><h3 className="text-sm font-semibold">{query ? 'Search results' : group === 'Brand' ? 'App identity' : group === 'Legal' ? 'Policies & terms' : group === 'Advertising' ? 'Advertising settings' : 'App content'}</h3><p className="text-[11px] text-gray-500 mt-1">{visible.length} settings</p></div><label className="flex items-center gap-2 border border-gray-200 rounded-md px-3 py-2 bg-white w-full sm:w-64"><Search size={15} className="text-gray-400" /><input aria-label="Search settings" placeholder="Search settings" value={query} onChange={e => setQuery(e.target.value)} className="min-w-0 w-full border-0 outline-none text-xs" /></label></div>
+    {error && <p role="alert" className="text-sm text-rose-700 bg-rose-50 rounded-md p-3">{error}</p>}
+    {notice && <p role="status" className="flex items-center gap-2 text-sm text-emerald-700 bg-emerald-50 rounded-md p-3"><Check size={16} />{notice}</p>}
+    {loading ? <div role="status" className="flex gap-2 items-center py-16 justify-center text-sm text-gray-500"><Loader2 size={18} className="animate-spin" />Loading settings</div> : <div className="settings-list">{visible.length === 0 && <p className="p-8 text-sm text-gray-500">No matching settings.</p>}{visible.map(setting => {
+      const item = content.find(value => value.key === setting.key) || { key: setting.key, ta: '', en: '' }
+      const value = item.en || item.ta
+      const Icon = setting.icon
+      const editing = editingKey === setting.key
+      const customIcon = setting.key === 'notification_icon' ? parseNotificationIcon(value) : null
+      return <section key={setting.key} className="setting-row" aria-label={setting.label}>
+        <div className="setting-summary"><h3 className="setting-label"><Icon /><span>{setting.label}</span></h3><div className="setting-value">{customIcon ? <div className="flex items-center gap-3"><div className="notification-icon-preview"><img src={`${API_BASE_URL}${customIcon.imageUrl}`} alt="Selected notification icon" /></div>{customIcon.label}</div> : setting.options ? setting.options.find(option => option.value === value)?.label || setting.options[0].label : setting.kind === 'toggle' ? <span className={`inline-flex items-center gap-2 ${value === 'true' ? 'text-emerald-700' : 'text-gray-500'}`}><span className={`w-1.5 h-1.5 rounded-full ${value === 'true' ? 'bg-emerald-500' : 'bg-gray-400'}`} />{value === 'true' ? 'Enabled' : 'Disabled'}</span> : setting.kind === 'image' && value ? <div className="setting-preview"><img src={value.startsWith('/') ? `${API_BASE_URL}${value}` : value} alt="App logo" /><span className="min-w-0 break-all">{value}</span></div> : <span className="line-clamp-2">{value || 'Not configured'}</span>}</div><button className="icon-button" title={`Edit ${setting.label}`} aria-label={`Edit ${setting.label}`} disabled={saving || uploadingIcon} onClick={() => edit(setting, item)}><Pencil size={15} /></button></div>
+        {editing && <form className="setting-editor" onSubmit={e => { e.preventDefault(); void save(setting.key) }}>
+          {setting.key === 'notification_icon' ? <NotificationIconPicker value={form.en} onChange={value => setForm({ ta: value, en: value })} onBusy={setUploadingIcon} /> : setting.options ? <label>{setting.label}<select aria-label={setting.label} value={form.en} onChange={e => setForm({ ta: e.target.value, en: e.target.value })}>{setting.options.map(option => <option key={option.value} value={option.value}>{option.label}</option>)}</select></label> : setting.kind === 'image' ? <ImageUploader label="App logo" value={form.en || form.ta} onChange={url => setForm({ ta: url, en: url })} folder="app_settings" /> : setting.kind === 'toggle' ? <label className="flex items-center gap-2"><input type="checkbox" checked={form.en === 'true'} onChange={e => setForm({ ta: String(e.target.checked), en: String(e.target.checked) })} />Enabled</label> : setting.kind === 'single' ? <label>Value<input value={form.en} onChange={e => setForm({ ta: e.target.value, en: e.target.value })} /></label> : <div className="grid sm:grid-cols-2 gap-5"><label>Tamil<textarea value={form.ta} onChange={e => setForm({ ...form, ta: e.target.value })} /></label><label>English<textarea value={form.en} onChange={e => setForm({ ...form, en: e.target.value })} /></label></div>}
+          <div className="flex justify-end gap-2 mt-5"><button type="button" className="secondary-button" disabled={saving || uploadingIcon} onClick={() => setEditingKey(null)}>Cancel</button><button className="primary-button" disabled={saving || uploadingIcon}>{saving ? <Loader2 size={15} className="animate-spin" /> : <Save size={15} />}{saving ? 'Saving' : 'Save & publish'}</button></div>
+        </form>}
+      </section>
+    })}</div>}
+  </div>
+}
