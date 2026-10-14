@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react'
-import { CalendarDays, Check, ChevronLeft, ChevronRight, CircleHelp, Copy, Eye, FileText, Globe, Home, Image, Layers, LayoutGrid, MapPin, Megaphone, Moon, Pause, Pencil, Plus, Save, Search, SlidersHorizontal, Smartphone, Star, Trash2, ArrowDownUp, X } from 'lucide-react'
+import { CalendarDays, Check, ChevronLeft, ChevronRight, CircleHelp, Copy, Eye, FileText, Globe, Home, Image, Layers, LayoutGrid, MapPin, Megaphone, Moon, Pause, Pencil, Plus, Save, Search, SlidersHorizontal, Smartphone, Star, Trash2, ArrowDownUp, X, Video } from 'lucide-react'
 import { API_BASE_URL } from '../utils/api'
 import './AdManagement.css'
 
@@ -9,7 +9,7 @@ type Page = { key: string; label: string; slots: Slot[] }
 type Placement = { id?: string; pageKey: string; placementKey: string; adFormat: Format; androidAdUnitId: string; iosAdUnitId: string; isEnabled: boolean; sortOrder: number; frequencyCap: number }
 type Configuration = { globalEnabled: boolean; pages: Record<string, boolean>; placements: Placement[]; registry: { pages: Page[] } }
 const blank: Placement = { pageKey: '', placementKey: '', adFormat: 'banner', androidAdUnitId: '', iosAdUnitId: '', isEnabled: true, sortOrder: 1, frequencyCap: 120 }
-const pageIcons: Record<string, typeof Home> = { home: Home, articles: FileText, calendar: CalendarDays, panchangam: Moon, festivals: Star, poster_posts: Image }
+const pageIcons: Record<string, typeof Home> = { home: Home, articles: FileText, calendar: CalendarDays, panchangam: Moon, festivals: Star, poster_posts: Image, reels: Video }
 const formatNames = { banner: 'Banner', native: 'Native', interstitial: 'Interstitial', rewarded: 'Rewarded' }
 const testIds = {
   android: { banner: 'ca-app-pub-3940256099942544/6300978111', native: 'ca-app-pub-3940256099942544/2247696110', interstitial: 'ca-app-pub-3940256099942544/1033173712', rewarded: 'ca-app-pub-3940256099942544/5224354917' },
@@ -92,7 +92,9 @@ export default function AdManagement() {
   useEffect(() => setPageNumber(1), [pageFilter, query, formatFilter, statusFilter, sort])
   const totalPages = Math.max(1, Math.ceil(filtered.length / 8)), currentPage = Math.min(pageNumber, totalPages)
   const rows = filtered.slice((currentPage - 1) * 8, currentPage * 8)
-  const activeCount = config?.placements.filter(row => row.isEnabled).length || 0
+  const activeCount = config?.placements.filter(row => config.globalEnabled && config.pages[row.pageKey] && row.isEnabled).length || 0
+  const audioReward = config?.placements.find(row => row.pageKey === 'articles' && row.placementKey === 'audio_unlock' && row.adFormat === 'rewarded')
+  const audioRewardStatus = !config ? '' : !config.globalEnabled ? 'Blocked: Global Ads Status is OFF. Enable it to show rewarded ads.' : !config.pages.articles ? 'Blocked: enable Articles in Page controls.' : !audioReward ? 'Not configured: create an Articles → opt-in audio reward placement.' : !audioReward.isEnabled ? 'Blocked: turn on the Articles audio reward placement.' : !audioReward.androidAdUnitId && !audioReward.iosAdUnitId ? 'Blocked: add a rewarded Ad Unit ID.' : 'Enabled. The first audio listen each day is free; further listens offer a rewarded ad on Android/iOS.'
 
   return <div className="ad-manager">
     <header className="ad-header"><div className="ad-heading"><Megaphone size={43} /><div><h1>Ad Management</h1><p>Manage AdMob ads for all app pages. Configure placements, Ad Unit IDs, and toggle ads as needed.</p></div></div><a className="ad-button ad-guide" href="https://developers.google.com/admob/flutter/quick-start" target="_blank" rel="noopener noreferrer"><CircleHelp size={16} /> AdMob Guide</a></header>
@@ -105,6 +107,7 @@ export default function AdManagement() {
       <article className="ad-stat"><span className="ad-stat-icon ad-icon-active"><Check /></span><div><strong>{activeCount}</strong><p>Active Ads</p><small className="ad-enabled">○ Enabled</small></div></article>
       <article className="ad-stat"><span className="ad-stat-icon ad-icon-inactive"><Pause /></span><div><strong>{(config?.placements.length || 0) - activeCount}</strong><p>Inactive Ads</p><small className="ad-disabled">○ Disabled</small></div></article>
     </section>
+    {config && <div role="status" className="ad-message"><strong>Blog audio reward: </strong>{audioRewardStatus}</div>}
     <nav className="ad-tabs" aria-label="Ad page filters"><button className={pageFilter === 'all' ? 'selected' : ''} onClick={() => setPageFilter('all')}><LayoutGrid size={18} /> All Pages</button>{pages.map(page => <button key={page.key} className={pageFilter === page.key ? 'selected' : ''} onClick={() => setPageFilter(page.key)}><PageIcon page={page.key} />{page.label}</button>)}</nav>
     <div className="ad-workspace">
       <section className="ad-table-panel">

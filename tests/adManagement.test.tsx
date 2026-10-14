@@ -5,6 +5,18 @@ import userEvent from '@testing-library/user-event'
 import AdManagement from '../src/pages/AdManagement'
 const base = { globalEnabled: true, pages: { home: true }, registry: { pages: [{ key: 'home', label: 'Home', slots: [{ key: 'inline_banner', label: 'Existing Home banner', formats: ['banner'] }] }] }, placements: [{ id: 'test-id', pageKey: 'home', placementKey: 'inline_banner', adFormat: 'banner', androidAdUnitId: 'ca-app-pub-3940256099942544/6300978111', iosAdUnitId: '', isEnabled: true, sortOrder: 0, frequencyCap: 120 }] }
 afterEach(() => { cleanup(); vi.restoreAllMocks(); vi.unstubAllGlobals() })
+test('Reels / Videos is selectable and global OFF explains audio reward blocking', async () => {
+  const fixture = structuredClone(base)
+  fixture.globalEnabled = false
+  fixture.registry.pages.push({ key: 'reels', label: 'Reels / Videos', slots: [{ key: 'bottom_banner', label: 'Below the video player', formats: ['banner', 'native'] }] })
+  setup(fixture)
+  const user = userEvent.setup()
+  const page = await screen.findByRole('combobox', { name: 'Page' })
+  await user.selectOptions(page, 'reels')
+  await user.selectOptions(screen.getByRole('combobox', { name: 'Placement' }), 'bottom_banner')
+  expect((page as HTMLSelectElement).value).toBe('reels')
+  expect(screen.getByText(/Blocked: Global Ads Status is OFF/)).toBeTruthy()
+})
 function setup(initial = base) {
   let state = structuredClone(initial)
   const calls: { url: string; method: string; body: any }[] = []

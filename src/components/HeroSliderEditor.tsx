@@ -1,3 +1,4 @@
+import { BannerDestinationSelect } from './BannerDestinationSelect';
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { API_BASE_URL } from '../utils/api';
@@ -32,13 +33,14 @@ export function HeroSliderEditor({ raw, onSaved }: { raw: string; onSaved: () =>
     <h3 className="text-xl text-astrology-gold font-bold">Home hero slider</h3>
     <p className="text-gray-400">Edit and preview below, then publish all changes together. Order follows the list. {config.slides.filter(s => s.enabled).length} enabled banners will appear in the app.</p>
     <label className="block">Autoplay seconds <input type="number" min={2} max={120} value={config.autoplaySeconds} onChange={e => setConfig({ ...config, autoplaySeconds: Number(e.target.value) })} className="bg-astrology-dark border rounded p-2 ml-3" /></label>
-    <p className="text-sm text-gray-400">Destinations: screen:daily_palan, screen:panchangam, screen:articles, screen:videos, article:MongoDB_ID, rasi:Mesham, https://example.com, or valikati://screen/daily_palan.</p>
+    <p className="text-sm text-gray-400">Choose where each banner button opens from the destination list.</p>
     {config.slides.map((s, i) => <div key={s.id} className="border border-astrology-gold/20 rounded-xl p-4 space-y-3">
       <div className="flex gap-3 items-center"><strong>Banner {i + 1}</strong><label><input type="checkbox" checked={s.enabled} onChange={e => update(s.id, { enabled: e.target.checked })} /> Enabled</label>
         <button disabled={i === 0} onClick={() => move(i, -1)}>↑</button><button disabled={i === config.slides.length - 1} onClick={() => move(i, 1)}>↓</button>
         <button onClick={() => setConfig(c => ({ ...c, slides: c.slides.filter(x => x.id !== s.id) }))}>Delete</button></div>
       <ImageUploader value={s.imageUrl} onChange={imageUrl => update(s.id, { imageUrl })} folder="home_banners" label="Banner image" />
-      {(['titleTa', 'descriptionTa', 'buttonTextTa', 'destination'] as const).map(field => <label key={field} className="block">{{ titleTa: 'Tamil title', descriptionTa: 'Tamil description', buttonTextTa: 'Tamil button text', destination: 'Button destination' }[field]}<input className="block w-full bg-astrology-dark border border-astrology-gold/20 rounded p-3" value={s[field]} onChange={e => update(s.id, { [field]: e.target.value })} /></label>)}
+      {(['titleTa', 'descriptionTa', 'buttonTextTa'] as const).map(field => <label key={field} className="block">{{ titleTa: 'Tamil title', descriptionTa: 'Tamil description', buttonTextTa: 'Tamil button text', destination: 'Button destination' }[field]}<input className="block w-full bg-astrology-dark border border-astrology-gold/20 rounded p-3" value={s[field]} onChange={e => update(s.id, { [field]: e.target.value })} /></label>)}
+      <BannerDestinationSelect value={s.destination} onChange={destination => update(s.id, { destination })} />
       <div className="relative overflow-hidden rounded-2xl min-h-48 p-6 flex flex-col justify-center" style={{ background: `linear-gradient(90deg, #003d32ed, #003d3250), url("${s.imageUrl.replace(/["\\\n\r]/g, '')}") center/cover` }}>
         <h4 className="text-3xl text-yellow-200 max-w-[75%]">{s.titleTa}</h4><p className="text-white max-w-[75%] my-3">{s.descriptionTa}</p><span className="rounded-full bg-yellow-200 text-emerald-950 px-4 py-2 self-start">{s.buttonTextTa} →</span>
       </div>
