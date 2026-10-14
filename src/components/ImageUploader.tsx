@@ -8,6 +8,8 @@ interface ImageUploaderProps {
   label?: string;
   placeholder?: string;
   folder?: string;
+  onBusy?: (busy: boolean) => void;
+  rasterOnly?: boolean;
 }
 
 const compressImage = (file: File, maxWidth = 1200, maxHeight = 1200, quality = 0.82): Promise<File> => {
@@ -67,6 +69,8 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
   label = 'Image',
   placeholder = 'https://example.com/image.png or asset path',
   folder = 'admin_uploads',
+  onBusy,
+  rasterOnly = false,
 }) => {
   const [isDragging, setIsDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
@@ -75,12 +79,21 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileUpload = async (file: File) => {
+    if (rasterOnly && !['image/png', 'image/jpeg', 'image/webp', 'image/gif'].includes(file.type)) {
+      setError('Choose a PNG, JPG, WebP or GIF image for the shortcut.');
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      setError('Please choose an image smaller than 10MB.');
+      return;
+    }
     if (!file.type.startsWith('image/')) {
       setError('Please select a valid image file (PNG, JPG, WEBP, GIF, SVG)');
       return;
     }
 
     setIsUploading(true);
+    onBusy?.(true);
     setError(null);
 
     try {
@@ -106,6 +119,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
       setError(err.message || 'Image upload failed. Please try again.');
     } finally {
       setIsUploading(false);
+      onBusy?.(false);
     }
   };
 
@@ -177,7 +191,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
           <input
             ref={fileInputRef}
             type="file"
-            accept="image/*"
+            accept={rasterOnly ? "image/png,image/jpeg,image/webp,image/gif" : "image/*"}
             className="hidden"
             onChange={(e) => {
               if (e.target.files && e.target.files[0]) {
