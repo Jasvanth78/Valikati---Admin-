@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { Plus, Trash2, Edit } from 'lucide-react'
 import { fetchApi } from '../utils/api'
+import { ImageUploader } from '../components/ImageUploader'
 
 export default function Proverbs() {
   const [proverbs, setProverbs] = useState<any[]>([])
@@ -8,10 +9,39 @@ export default function Proverbs() {
   const [loading, setLoading] = useState(true)
   const [formData, setFormData] = useState({ contentTa: '', contentEn: '', meaningTa: '', meaningEn: '' })
   const [editingId, setEditingId] = useState(null)
+  const [background, setBackground] = useState('')
+  const [backgroundLoaded, setBackgroundLoaded] = useState(false)
+  const [backgroundBusy, setBackgroundBusy] = useState(false)
+  const [uploadingBackground, setUploadingBackground] = useState(false)
 
   useEffect(() => {
     fetchProverbs()
+    loadBackground()
   }, [])
+
+  const loadBackground = async () => {
+    try {
+      const data = await fetchApi('/api/admin/app-content')
+      if (!Array.isArray(data)) throw new Error('Invalid settings response')
+      const saved = data.find((item: any) => item.key === 'home_proverb_background')
+      setBackground(saved?.en || '')
+      setBackgroundLoaded(true)
+    } catch { setMessage('Could not load the proverb background. Retry before publishing.') }
+  }
+
+  const publishBackground = async (event: React.FormEvent) => {
+    event.preventDefault()
+    if (!backgroundLoaded || uploadingBackground || backgroundBusy) return
+    setBackgroundBusy(true)
+    try {
+      await fetchApi('/api/admin/app-content', {
+        method: 'PUT',
+        body: JSON.stringify({ key: 'home_proverb_background', ta: background.trim(), en: background.trim() }),
+      })
+      setMessage(background.trim() ? 'Proverb background published to the app.' : 'Default proverb background restored.')
+    } catch (error) { setMessage(error instanceof Error ? error.message : 'Could not publish the background.') }
+    finally { setBackgroundBusy(false) }
+  }
 
   const fetchProverbs = async () => {
     try {
@@ -70,6 +100,15 @@ export default function Proverbs() {
       {message && <p role="status" className="text-astrology-gold">{message}</p>}
       <h2 className="text-2xl font-bold bg-gold-gradient bg-clip-text text-transparent">Proverbs (பழமொழி)</h2>
       
+      <form onSubmit={publishBackground} className="bg-astrology-card p-6 rounded-xl border border-astrology-gold/20 space-y-4">
+        <h3 className="text-xl font-bold">Home proverb card background</h3>
+        <p className="text-sm text-gray-400">Choose an image from your device for the Today's Proverb card. A wide landscape image works best. Remove the image and publish to restore the default background.</p>
+        {!backgroundLoaded ? <button type="button" onClick={loadBackground}>Load / retry background settings</button> : <fieldset disabled={backgroundBusy} className="space-y-4">
+          <ImageUploader label="Proverb background image" value={background} onChange={setBackground} folder="home_backgrounds" rasterOnly onBusy={setUploadingBackground} />
+          <button type="submit" disabled={uploadingBackground} className="bg-gold-gradient text-astrology-dark font-bold px-6 py-2 rounded">{backgroundBusy ? 'Publishing…' : 'Publish proverb background'}</button>
+        </fieldset>}
+      </form>
+
       <div className="bg-astrology-card p-6 rounded-xl border border-astrology-gold/20">
         <h3 className="text-xl font-bold mb-4">{editingId ? 'Edit Proverb' : 'Add New Proverb'}</h3>
         <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">

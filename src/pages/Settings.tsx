@@ -4,9 +4,10 @@ import axios from 'axios'
 import { API_BASE_URL } from '../utils/api'
 import { ImageUploader } from '../components/ImageUploader'
 import NotificationIconPicker, { parseNotificationIcon } from '../components/NotificationIconPicker'
+import { AppUpdatesEditor } from '../components/AppUpdatesEditor'
 
 const api = axios.create({ baseURL: `${API_BASE_URL}/api/admin` })
-const groups = ['Brand', 'Content', 'Legal', 'Advertising'] as const
+const groups = ['Brand', 'Content', 'Legal', 'Advertising', 'Updates'] as const
 type Group = typeof groups[number]
 type Item = { key: string; ta: string; en: string }
 type Setting = { key: string; label: string; group: Group; icon: typeof Image; kind?: 'image' | 'single' | 'toggle'; options?: { value: string; label: string }[] }
@@ -65,7 +66,7 @@ export default function Settings() {
     <div className="flex flex-wrap justify-between items-center gap-4"><div><h3 className="text-sm font-semibold">{query ? 'Search results' : group === 'Brand' ? 'App identity' : group === 'Legal' ? 'Policies & terms' : group === 'Advertising' ? 'Advertising settings' : 'App content'}</h3><p className="text-[11px] text-gray-500 mt-1">{visible.length} settings</p></div><label className="flex items-center gap-2 border border-gray-200 rounded-md px-3 py-2 bg-white w-full sm:w-64"><Search size={15} className="text-gray-400" /><input aria-label="Search settings" placeholder="Search settings" value={query} onChange={e => setQuery(e.target.value)} className="min-w-0 w-full border-0 outline-none text-xs" /></label></div>
     {error && <p role="alert" className="text-sm text-rose-700 bg-rose-50 rounded-md p-3">{error}</p>}
     {notice && <p role="status" className="flex items-center gap-2 text-sm text-emerald-700 bg-emerald-50 rounded-md p-3"><Check size={16} />{notice}</p>}
-    {loading ? <div role="status" className="flex gap-2 items-center py-16 justify-center text-sm text-gray-500"><Loader2 size={18} className="animate-spin" />Loading settings</div> : <div className="settings-list">{visible.length === 0 && <p className="p-8 text-sm text-gray-500">No matching settings.</p>}{visible.map(setting => {
+    {loading ? <div role="status" className="flex gap-2 items-center py-16 justify-center text-sm text-gray-500"><Loader2 size={18} className="animate-spin" />Loading settings</div> : group === 'Updates' && !query ? <AppUpdatesEditor raw={content.find(item => item.key === 'app_update_policy')?.en || ''} onSaved={() => void load()} /> : <div className="settings-list">{visible.length === 0 && <p className="p-8 text-sm text-gray-500">No matching settings.</p>}{visible.map(setting => {
       const item = content.find(value => value.key === setting.key) || { key: setting.key, ta: '', en: '' }
       const value = item.en || item.ta
       const Icon = setting.icon

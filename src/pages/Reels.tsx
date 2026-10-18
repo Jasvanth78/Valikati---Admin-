@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Trash2, Edit2, Play, Settings } from 'lucide-react';
+import { Plus, Trash2, Play } from 'lucide-react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
+import { ReelThumbnail } from '../components/ReelThumbnail';
 
 interface Reel {
   id: string;
   youtubeVideoId: string;
+  videoUrl?: string;
+  thumbnail?: string;
   title: string;
   description: string;
   hashtags: string[];
@@ -24,7 +27,7 @@ const Reels = () => {
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    youtubeVideoId: '',
+    videoUrl: '',
     hashtags: '',
   });
 
@@ -55,7 +58,7 @@ const Reels = () => {
     setFormData({
       title: '',
       description: '',
-      youtubeVideoId: '',
+      videoUrl: '',
       hashtags: '',
     });
     setIsAdding(false);
@@ -90,7 +93,7 @@ const Reels = () => {
       fetchReels();
       resetForm();
     } catch (error) {
-      toast.error('Failed to save reel.');
+      toast.error(axios.isAxiosError(error) ? error.response?.data?.error || 'Failed to save reel.' : 'Failed to save reel.');
     }
   };
 
@@ -109,7 +112,7 @@ const Reels = () => {
           <h1 className="text-2xl font-bold text-astrology-gold">
             Reels & Videos
           </h1>
-          <p className="text-gray-400 text-sm mt-1">Manage YouTube shorts/videos shown in the app.</p>
+          <p className="text-gray-400 text-sm mt-1">Manage YouTube videos and video links from any website.</p>
         </div>
         <button
           onClick={() => setIsAdding(true)}
@@ -131,11 +134,7 @@ const Reels = () => {
           reels.map((reel) => (
             <div key={reel.id} className="bg-astrology-card rounded-xl border border-astrology-gold/10 overflow-hidden hover:border-astrology-gold/40 transition-all duration-300 flex flex-col">
               <div className="relative aspect-video bg-black/50">
-                <img 
-                  src={`https://img.youtube.com/vi/${reel.youtubeVideoId}/hqdefault.jpg`} 
-                  alt={reel.title}
-                  className="w-full h-full object-cover"
-                />
+                <ReelThumbnail id={reel.id} source={reel.videoUrl || reel.youtubeVideoId} title={reel.title} thumbnail={reel.thumbnail} />
                 <div className="absolute inset-0 bg-black/40 flex items-center justify-center group-hover:bg-black/20 transition-all">
                   <div className="w-12 h-12 bg-astrology-gold/80 backdrop-blur-sm rounded-full flex items-center justify-center border border-astrology-gold">
                     <Play className="w-6 h-6 text-black ml-1" />
@@ -151,6 +150,7 @@ const Reels = () => {
               <div className="p-5 flex flex-col flex-1">
                 <h3 className="font-bold text-white line-clamp-1">{reel.title}</h3>
                 <p className="text-gray-400 text-sm mt-1 line-clamp-2 flex-1">{reel.description}</p>
+                <a href={reel.videoUrl || (/^[\w-]{11}$/.test(reel.youtubeVideoId) ? `https://www.youtube.com/watch?v=${reel.youtubeVideoId}` : reel.youtubeVideoId)} target="_blank" rel="noopener noreferrer" className="text-astrology-gold text-sm mt-3 truncate">Open video link</a>
                 
                 <div className="mt-4 flex gap-2 flex-wrap">
                   {reel.hashtags.map((tag, i) => (
@@ -184,16 +184,17 @@ const Reels = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">YouTube Video ID or Link</label>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Video link or YouTube ID</label>
                 <input
                   type="text"
-                  name="youtubeVideoId"
+                  name="videoUrl"
                   required
-                  value={formData.youtubeVideoId}
+                  value={formData.videoUrl}
                   onChange={handleInputChange}
                   className="w-full px-4 py-3 rounded-lg bg-black/50 border border-astrology-gold/20 text-white focus:ring-1 focus:ring-astrology-gold focus:border-astrology-gold outline-none transition-all placeholder-gray-600"
-                  placeholder="e.g. dQw4w9WgXcQ or https://youtu.be/dQw4w9WgXcQ"
+                  placeholder="https://example.com/video.mp4 or a YouTube link"
                 />
+                <p className="text-gray-400 text-xs mt-2">Direct video URLs play in the feed when supported by the device. Website pages that block playback open on their original website.</p>
               </div>
 
               <div>
