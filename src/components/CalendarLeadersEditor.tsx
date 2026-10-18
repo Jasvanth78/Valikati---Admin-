@@ -2,10 +2,10 @@ import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { API_BASE_URL } from '../utils/api';
 import { ImageUploader } from './ImageUploader';
-import defaults from '../../../backend/config/calendarLeadersDefaults.json';
-import bharathi from '../../../mobile_app/assets/images/calendar_bharathi_wide.png';
-import kamaraj from '../../../mobile_app/assets/images/calendar_kamaraj_wide.png';
-import kattabomman from '../../../mobile_app/assets/images/calendar_kattabomman_wide.png';
+import defaults from '../config/calendarLeadersDefaults.json';
+import bharathi from '../assets/calendar/calendar_bharathi_wide.png';
+import kamaraj from '../assets/calendar/calendar_kamaraj_wide.png';
+import kattabomman from '../assets/calendar/calendar_kattabomman_wide.png';
 
 type Leader = typeof defaults[number];
 const builtins: Record<string, string> = {
