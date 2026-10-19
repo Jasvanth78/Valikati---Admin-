@@ -28,6 +28,7 @@ const Reels = () => {
     title: '',
     description: '',
     videoUrl: '',
+    embedCode: '',
     hashtags: '',
   });
 
@@ -59,6 +60,7 @@ const Reels = () => {
       title: '',
       description: '',
       videoUrl: '',
+      embedCode: '',
       hashtags: '',
     });
     setIsAdding(false);
@@ -78,6 +80,14 @@ const Reels = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!formData.videoUrl.trim() && !formData.embedCode.trim()) {
+      toast.error('Enter a video link or embed video.');
+      return;
+    }
+    if (formData.videoUrl.trim() && formData.embedCode.trim()) {
+      toast.error('Enter either a video link or an embed video, not both.');
+      return;
+    }
     
     const tags = formData.hashtags
       .split(',')
@@ -167,7 +177,7 @@ const Reels = () => {
 
       {isAdding && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-astrology-card border border-astrology-gold/20 rounded-xl p-8 w-full max-w-xl shadow-2xl">
+          <div className="bg-astrology-card border border-astrology-gold/20 rounded-xl p-8 w-full max-w-xl max-h-[90vh] overflow-y-auto shadow-2xl">
             <h2 className="text-2xl font-bold text-astrology-gold mb-6">Add New Video</h2>
             <form onSubmit={handleSubmit} className="space-y-5">
               <div>
@@ -188,13 +198,26 @@ const Reels = () => {
                 <input
                   type="text"
                   name="videoUrl"
-                  required
                   value={formData.videoUrl}
                   onChange={handleInputChange}
                   className="w-full px-4 py-3 rounded-lg bg-black/50 border border-astrology-gold/20 text-white focus:ring-1 focus:ring-astrology-gold focus:border-astrology-gold outline-none transition-all placeholder-gray-600"
                   placeholder="https://example.com/video.mp4 or a YouTube link"
                 />
                 <p className="text-gray-400 text-xs mt-2">Direct video URLs play in the feed when supported by the device. Website pages that block playback open on their original website.</p>
+              </div>
+
+              <div>
+                <label htmlFor="embedCode" className="block text-sm font-medium text-gray-300 mb-2">Embed video (URL or iframe code)</label>
+                <textarea
+                  id="embedCode"
+                  name="embedCode"
+                  value={formData.embedCode}
+                  onChange={handleInputChange}
+                  rows={3}
+                  className="w-full px-4 py-3 rounded-lg bg-black/50 border border-astrology-gold/20 text-white focus:ring-1 focus:ring-astrology-gold focus:border-astrology-gold outline-none transition-all resize-none placeholder-gray-600"
+                  placeholder={'https://player.vimeo.com/video/123456 or <iframe src="..."></iframe>'}
+                />
+                <p className="text-gray-400 text-xs mt-2">Use this instead of the video link above. Paste the provider’s embed URL or iframe code. Playback depends on the provider allowing embedding.</p>
               </div>
 
               <div>
