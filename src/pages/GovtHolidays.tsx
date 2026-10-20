@@ -76,7 +76,7 @@ export default function GovtHolidays() {
           <input required placeholder="Date (e.g. 02)" value={formData.date} onChange={e => setFormData({...formData, date: e.target.value})} className="bg-black/50 border border-astrology-gold/20 rounded p-2 text-white" />
           <input required placeholder="Month (e.g. OCT)" value={formData.month} onChange={e => setFormData({...formData, month: e.target.value})} className="bg-black/50 border border-astrology-gold/20 rounded p-2 text-white" />
           <input required placeholder="Name (Tamil)" value={formData.nameTa} onChange={e => setFormData({...formData, nameTa: e.target.value})} className="bg-black/50 border border-astrology-gold/20 rounded p-2 text-white" />
-          <input required placeholder="Name (English)" value={formData.nameEn} onChange={e => setFormData({...formData, nameEn: e.target.value})} className="bg-black/50 border border-astrology-gold/20 rounded p-2 text-white" />
+          <input placeholder="Name (English ? automatic when blank)" value={formData.nameEn} onChange={e => setFormData({...formData, nameEn: e.target.value})} className="bg-black/50 border border-astrology-gold/20 rounded p-2 text-white" />
           <div className="flex items-center gap-4 bg-black/50 border border-astrology-gold/20 rounded p-2">
             <span className="text-gray-400 text-sm">Background Color:</span>
             <input required type="color" value={formData.color} onChange={e => setFormData({...formData, color: e.target.value})} className="w-10 h-10 cursor-pointer" />

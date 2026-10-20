@@ -33,6 +33,21 @@ function setup(initial = base) {
   render(<AdManagement />)
   return calls
 }
+
+test('audio reward stays visible outside table filters and opens its editor', async () => {
+  const fixture = structuredClone(base)
+  fixture.pages = { ...fixture.pages, articles: true } as typeof fixture.pages
+  fixture.registry.pages.push({ key: 'articles', label: 'Articles', slots: [{ key: 'audio_unlock', label: 'Existing opt-in audio reward', formats: ['rewarded'] }] })
+  fixture.placements.push({ ...base.placements[0], id: 'audio-id', pageKey: 'articles', placementKey: 'audio_unlock', adFormat: 'rewarded' })
+  const calls = setup(fixture)
+  const user = userEvent.setup()
+  await user.click(await screen.findByRole('button', { name: 'Home', exact: true }))
+  expect(screen.getByRole('region', { name: 'Audio rewarded ad' })).toBeTruthy()
+  await user.click(screen.getByRole('checkbox', { name: 'Enable audio rewarded ad' }))
+  await waitFor(() => expect(calls.find(c => c.url.endsWith('/audio-id/status'))?.body.isEnabled).toBe(false))
+  await user.click(screen.getByRole('button', { name: 'Edit audio rewarded ad' }))
+  expect((screen.getByRole('combobox', { name: 'Placement' }) as HTMLSelectElement).value).toBe('audio_unlock')
+})
 test('global OFF requires confirmation and page settings save independently', async () => {
   const calls = setup(); const user = userEvent.setup()
   const toggle = await screen.findByRole('checkbox', { name: 'Enable Ads Globally' })

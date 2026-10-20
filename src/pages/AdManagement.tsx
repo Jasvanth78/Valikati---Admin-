@@ -107,7 +107,21 @@ export default function AdManagement() {
       <article className="ad-stat"><span className="ad-stat-icon ad-icon-active"><Check /></span><div><strong>{activeCount}</strong><p>Active Ads</p><small className="ad-enabled">○ Enabled</small></div></article>
       <article className="ad-stat"><span className="ad-stat-icon ad-icon-inactive"><Pause /></span><div><strong>{(config?.placements.length || 0) - activeCount}</strong><p>Inactive Ads</p><small className="ad-disabled">○ Disabled</small></div></article>
     </section>
-    {config && <div role="status" className="ad-message"><strong>Blog audio reward: </strong>{audioRewardStatus}</div>}
+    {config && <section aria-label="Audio rewarded ad" className="ad-table-panel" style={{ padding: 16, marginBottom: 16 }}>
+      <h2>Audio · Rewarded Ad</h2>
+      <p role="status" style={{ margin: '10px 0', fontSize: 12 }}>{audioRewardStatus}</p>
+      <p style={{ fontSize: 12, marginBottom: 12 }}>Articles audio unlock · The first daily listen is free. Further listens offer a rewarded ad.</p>
+      {audioReward && <>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>Enable audio rewarded ad
+          <Toggle label="Enable audio rewarded ad" checked={audioReward.isEnabled} disabled={busy} onChange={value => void mutate(() => request(`/${audioReward.id}/status`, 'PATCH', { isEnabled: value }))} />
+        </div>
+        <p style={{ fontSize: 12, overflowWrap: 'anywhere' }}>Android: {audioReward.androidAdUnitId || 'Not configured'}<br />iOS: {audioReward.iosAdUnitId || 'Not configured'}</p>
+      </>}
+      <button className="ad-button" disabled={busy || !pages.some(page => page.key === 'articles' && page.slots.some(slot => slot.key === 'audio_unlock'))} onClick={() => {
+        setForm(audioReward ? { ...audioReward } : { ...blank, pageKey: 'articles', placementKey: 'audio_unlock', adFormat: 'rewarded', isEnabled: false });
+        setError(''); setPreview(false);
+      }}>{audioReward ? 'Edit audio rewarded ad' : 'Configure audio rewarded ad'}</button>
+    </section>}
     <nav className="ad-tabs" aria-label="Ad page filters"><button className={pageFilter === 'all' ? 'selected' : ''} onClick={() => setPageFilter('all')}><LayoutGrid size={18} /> All Pages</button>{pages.map(page => <button key={page.key} className={pageFilter === page.key ? 'selected' : ''} onClick={() => setPageFilter(page.key)}><PageIcon page={page.key} />{page.label}</button>)}</nav>
     <div className="ad-workspace">
       <section className="ad-table-panel">

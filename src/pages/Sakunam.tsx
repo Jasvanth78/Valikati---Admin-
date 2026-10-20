@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { Plus, Edit2, Trash2, Home, Image as ImageIcon, X, AlertTriangle, Eye } from 'lucide-react'
 import { API_BASE_URL } from '../utils/api'
 import { ImageUploader } from '../components/ImageUploader'
+import SakunamExcelImport from '../components/SakunamExcelImport'
 import ReactQuill from 'react-quill-new'
 import 'react-quill-new/dist/quill.snow.css'
 
@@ -25,6 +26,14 @@ const emptySakunamForm: SakunamForm = {
 }
 
 const CATEGORIES = [
+  { value: 'animals', label: 'விலங்குகள் சகுனம் (Animal omens)' },
+  { value: 'veedu', label: 'வீட்டு சகுனம் (Household omens)' },
+  { value: 'oli', label: 'ஒலி சகுனம் (Sound omens)' },
+  { value: 'bali_temple', label: 'கோவில் பலி (Temple offerings)' },
+  { value: 'bali_home', label: 'வீட்டு பலி (Home offerings)' },
+  { value: 'bali_special', label: 'சிறப்பு பலி (Special offerings)' },
+  { value: 'bali_day', label: 'நாள் வாரிய பலி (Offerings by day)' },
+  { value: 'bali_benefits', label: 'பலியின் பலன்கள் (Significance of offerings)' },
   { value: 'kagam', label: 'காகம் (Crow)' },
   { value: 'palli_sollum', label: 'பல்லி சொல்லும் பலன் (Lizard Chirping)' },
   { value: 'palli_vilum', label: 'பல்லி விழும் பலன் (Lizard Falling)' },
@@ -182,6 +191,7 @@ const Sakunam = () => {
       </header>
       
       {/* Filters */}
+      <SakunamExcelImport categories={CATEGORIES} onImported={() => { void fetchSakunamList() }} />
       <div className="flex gap-2 overflow-x-auto pb-2">
         <button 
           onClick={() => setSelectedFilterCategory('all')}

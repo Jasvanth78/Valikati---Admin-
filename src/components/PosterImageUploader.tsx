@@ -26,7 +26,7 @@ export default function PosterImageUploader({ value, onChange, onBusy }: { value
     <button type="button" disabled={busy} onClick={() => input.current?.click()} onDragOver={e => e.preventDefault()} onDrop={e => { e.preventDefault(); if (!busy && e.dataTransfer.files[0]) void upload(e.dataTransfer.files[0]) }} className="w-full border-2 border-dashed border-emerald-500/40 rounded-2xl p-6 bg-emerald-500/5 flex flex-col items-center gap-3 disabled:opacity-50">
       {busy ? <Loader2 className="animate-spin text-amber-300" /> : <UploadCloud className="text-emerald-300" size={32} />}
       <span>{busy ? 'Uploading poster…' : value ? 'Replace poster image' : 'Choose a poster image or drop it here'}</span>
-      <span className="text-xs text-gray-400">JPG, PNG, WEBP, GIF · up to 10 MB · original proportions preserved</span>
+      <span className="text-xs text-gray-400">JPG, PNG, WEBP, GIF · up to 10 MB · saved permanently in Cloudinary</span>
     </button>
     {error && <p role="alert" className="text-rose-300 text-sm">{error}</p>}
     {value && <div className="relative bg-black/20 rounded-xl p-2"><img src={value.startsWith('/') ? `${API_BASE_URL}${value}` : value} alt="Poster preview" className="w-full max-h-96 object-contain rounded-lg" /><button type="button" disabled={busy} onClick={() => onChange('')} aria-label="Remove poster image" className="absolute top-3 right-3 bg-black/70 rounded-full p-2"><X size={16} /></button></div>}

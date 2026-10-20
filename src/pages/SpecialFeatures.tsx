@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Plus, Edit2, Trash2, Save, X, Image as ImageIcon, Settings } from 'lucide-react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
+import CustomPageBuilder from './CustomPageBuilder';
 
 interface SpecialFeature {
   id: string;
@@ -22,6 +23,7 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:7006';
 const API_URL = `${API_BASE_URL}/api`;
 
 const SpecialFeatures = () => {
+  const [builderOpen, setBuilderOpen] = useState(false);
   const [features, setFeatures] = useState<SpecialFeature[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -153,8 +155,10 @@ const SpecialFeatures = () => {
     );
   }
 
+  if (builderOpen) return <><button onClick={() => setBuilderOpen(false)} className="mb-5 border rounded px-4 py-2">← Existing special features</button><CustomPageBuilder /></>;
   return (
     <div className="space-y-8 pb-10">
+      <button onClick={() => setBuilderOpen(true)} className="bg-astrology-gold text-black rounded-xl px-5 py-3">Create custom pages · Page Builder</button>
       <div className="flex justify-between items-center bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 bg-clip-text text-transparent bg-gradient-to-r from-primary-600 to-primary-400">
@@ -292,7 +296,7 @@ const SpecialFeatures = () => {
                         name="titleEn"
                         value={formData.titleEn}
                         onChange={handleInputChange}
-                        required
+                        
                         className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all bg-white"
                         placeholder="e.g. Panchangam"
                       />

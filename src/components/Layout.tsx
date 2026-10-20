@@ -23,10 +23,22 @@ import Reels from '../pages/Reels'
 import GovtHolidays from '../pages/GovtHolidays'
 import Proverbs from '../pages/Proverbs'
 import HomeComponents from '../pages/HomeComponents'
+import CustomPageBuilder from '../pages/CustomPageBuilder'
+import { fetchApi } from '../utils/api'
 
 const Layout = ({ adminEmail = '', onLogout }: { adminEmail?: string; onLogout?: () => void }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(window.innerWidth >= 768)
   const [activePage, setActivePage] = useState('dashboard')
+  const [translationMessage, setTranslationMessage] = useState('Checking automatic English translation…')
+  useEffect(() => {
+    let current = true
+    const check = () => fetchApi('/api/admin/translation-status').then(data => {
+      if (current) setTranslationMessage(data.message)
+    }).catch(() => { if (current) setTranslationMessage('English translation status could not be checked. Tamil content can still be edited.') })
+    void check()
+    const timer = window.setInterval(check, 30000)
+    return () => { current = false; window.clearInterval(timer) }
+  }, [activePage])
   useEffect(() => {
     const breakpoint = window.matchMedia('(min-width: 768px)')
     const change = () => setIsSidebarOpen(breakpoint.matches)
@@ -56,6 +68,7 @@ const Layout = ({ adminEmail = '', onLogout }: { adminEmail?: string; onLogout?:
       case 'vastu': return <VastuSasthiram />
       case 'sakunam': return <Sakunam />
       case 'special-features': return <SpecialFeatures />
+      case 'page-builder': return <CustomPageBuilder />
       case 'reels': return <Reels />
       case 'govt-holidays': return <GovtHolidays />
       case 'proverbs': return <Proverbs />
@@ -92,6 +105,7 @@ const Layout = ({ adminEmail = '', onLogout }: { adminEmail?: string; onLogout?:
           {isSidebarOpen && <p className="nav-group">Workspace</p>}
           <NavItem icon={<LayoutDashboard size={20} />} label="Dashboard" active={activePage === 'dashboard'} onClick={() => navigate('dashboard')} isOpen={isSidebarOpen} />
           <NavItem icon={<Home size={20} />} label="Home Components" active={activePage === 'home-components'} onClick={() => navigate('home-components')} isOpen={isSidebarOpen} />
+          <NavItem icon={<LayoutGrid size={20} />} label="Page Builder" active={activePage === 'page-builder'} onClick={() => navigate('page-builder')} isOpen={isSidebarOpen} />
           <NavItem icon={<BookOpen size={20} className="text-emerald-400" />} label="Blogs" active={activePage === 'blogs'} onClick={() => navigate('blogs')} isOpen={isSidebarOpen} />
           <NavItem icon={<LayoutGrid size={20} className="text-emerald-300" />} label="Poster Posts" active={activePage === 'poster-posts'} onClick={() => navigate('poster-posts')} isOpen={isSidebarOpen} />
           <NavItem icon={<Eye size={20} />} label="Ad Management" active={activePage === 'ad-management'} onClick={() => navigate('ad-management')} isOpen={isSidebarOpen} />
@@ -126,7 +140,7 @@ const Layout = ({ adminEmail = '', onLogout }: { adminEmail?: string; onLogout?:
           <div className="flex items-center gap-3 min-w-0"><button className="icon-button" title={isSidebarOpen ? 'Collapse navigation' : 'Open navigation'} aria-label={isSidebarOpen ? 'Collapse navigation' : 'Open navigation'} onClick={() => setIsSidebarOpen(!isSidebarOpen)}>{isSidebarOpen ? <PanelLeftClose size={17} /> : <PanelLeftOpen size={17} />}</button><span className="text-gray-500 hidden sm:inline">Workspace</span><ChevronRight size={13} className="text-gray-400 hidden sm:inline" /><span className="capitalize font-medium truncate">{activePage.replaceAll('-', ' ')}</span></div>
           <div className="flex items-center gap-2 text-[11px] text-gray-500"><Shield size={14} /><span>Admin console</span></div>
         </header>
-        <main className="admin-content">{renderPage()}</main>
+        <main className="admin-content"><p role="status" className="text-sm text-gray-400 mb-5">{translationMessage}</p>{renderPage()}</main>
       </div>
     </div>
   )

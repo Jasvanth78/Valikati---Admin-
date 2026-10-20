@@ -3,6 +3,7 @@ import { Plus, Trash2, Play } from 'lucide-react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 import { ReelThumbnail } from '../components/ReelThumbnail';
+import { ReelShareSourceEditor } from '../components/ReelShareSourceEditor';
 
 interface Reel {
   id: string;
@@ -159,6 +160,7 @@ const Reels = () => {
               </div>
               <div className="p-5 flex flex-col flex-1">
                 <h3 className="font-bold text-white line-clamp-1">{reel.title}</h3>
+                <ReelShareSourceEditor id={reel.id} />
                 <p className="text-gray-400 text-sm mt-1 line-clamp-2 flex-1">{reel.description}</p>
                 <a href={reel.videoUrl || (/^[\w-]{11}$/.test(reel.youtubeVideoId) ? `https://www.youtube.com/watch?v=${reel.youtubeVideoId}` : reel.youtubeVideoId)} target="_blank" rel="noopener noreferrer" className="text-astrology-gold text-sm mt-3 truncate">Open video link</a>
                 
