@@ -3,6 +3,7 @@ import { Plus, Edit2, Trash2, Home, Image as ImageIcon, X, AlertTriangle, Eye } 
 import { API_BASE_URL } from '../utils/api'
 import { ImageUploader } from '../components/ImageUploader'
 import SakunamExcelImport from '../components/SakunamExcelImport'
+import SakunamCategoryManager from '../components/SakunamCategoryManager'
 import ReactQuill from 'react-quill-new'
 import 'react-quill-new/dist/quill.snow.css'
 
@@ -192,6 +193,7 @@ const Sakunam = () => {
       
       {/* Filters */}
       <SakunamExcelImport categories={CATEGORIES} onImported={() => { void fetchSakunamList() }} />
+      <SakunamCategoryManager categories={CATEGORIES} entries={sakunamList} onChanged={() => { void fetchSakunamList() }} />
       <div className="flex gap-2 overflow-x-auto pb-2">
         <button 
           onClick={() => setSelectedFilterCategory('all')}
@@ -378,7 +380,7 @@ const Sakunam = () => {
                     className="p-1.5 text-red-400 hover:bg-red-400/10 rounded-md transition-colors"
                     title="Delete"
                   >
-                    <Trash2 size={16} />
+                    <Trash2 size={16} /> Delete
                   </button>
                 </div>
               </div>
